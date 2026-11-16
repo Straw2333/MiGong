@@ -32,10 +32,11 @@
     touch-action:none; cursor:grab;
   }
   #game:active{ cursor:grabbing; }
+  button{ touch-action:manipulation; }
 
-  /* ---------- 顶部 HUD 与主页右上角工具 ---------- */
+  /* ---------- 顶部 HUD 与主页内部工具栏 ---------- */
   #hud{
-    position:absolute; top:0; left:0; right:0; z-index:5;
+    position:absolute; top:0; left:0; right:0; z-index:10;
     display:flex; align-items:center; justify-content:space-between;
     padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left));
     pointer-events:none;
@@ -43,11 +44,19 @@
   #hud.hidden{ display:none; }
   .hud-left, .hud-right{ display:flex; align-items:center; gap:7px; }
   .hud-left{ pointer-events:none; }
-  .hud-right{ pointer-events:auto; }
-  .home-tools{
-    position:absolute; top:max(10px, env(safe-area-inset-top)); right:max(12px, env(safe-area-inset-right));
-    z-index:12; display:flex; align-items:center; gap:7px;
+  .hud-right{ pointer-events:auto; position:relative; z-index:11; }
+  .home-top-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin-bottom:6px;
   }
+  .home-tag{
+    font-size:11.5px; font-weight:700; color:#7e9865;
+    background:#f1f8e7; padding:4px 10px; border-radius:999px;
+  }
+  .home-tools{
+    display:flex; align-items:center; gap:6px; flex-shrink:0;
+  }
+  .home-tools .icon-btn{ width:36px; height:36px; }
   .pill{
     background:rgba(255,255,255,.88); border-radius:999px;
     padding:6px 13px; font-weight:700; color:var(--ink); font-size:15px; line-height:1;
@@ -59,6 +68,7 @@
   .star-icon{ display:inline-block; color:#cfd8c6; transition:color .18s, transform .18s; }
   .star-icon.on{ color:var(--gold); text-shadow:0 0 8px rgba(255,200,60,.55); }
   .icon-btn{
+    position:relative; z-index:2;
     width:42px; height:42px; border-radius:50%; border:none; padding:0;
     background:rgba(255,255,255,.88); color:var(--ink);
     display:flex; align-items:center; justify-content:center;
@@ -70,57 +80,64 @@
 
   /* ---------- 弹层 ---------- */
   .overlay{
-    position:absolute; inset:0; z-index:10;
+    position:absolute; inset:0; z-index:20;
     display:flex; align-items:center; justify-content:center;
     background:rgba(43,66,31,.34);
     backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
-    padding:14px;
+    padding:max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
   }
+  #stickerModal, #fsModal{ z-index:40; }
   .overlay.hidden{ display:none; }
+  #stage.rotated .overlay{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+  #stage.rotated #hud{
+    padding: max(8px, env(safe-area-inset-right)) max(26px, env(safe-area-inset-bottom)) 0 max(18px, env(safe-area-inset-top));
+  }
+  #stage.rotated .overlay{
+    padding: max(8px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) max(18px, env(safe-area-inset-top));
+  }
   .card{
     position:relative;
-    background:var(--cream); border-radius:32px; padding:20px 22px 18px;
+    background:var(--cream); border-radius:30px; padding:18px 20px 16px;
     width:min(388px, 100%);
-    max-height:calc(100% - 12px); overflow:auto;
-    -webkit-overflow-scrolling:touch; touch-action:pan-y;
+    max-height:100%; overflow:auto; touch-action:pan-y;
     text-align:center;
     box-shadow:0 24px 60px rgba(40,70,30,.28), inset 0 0 0 4px rgba(255,255,255,.6);
     animation:pop .38s cubic-bezier(.2,1.5,.4,1) both;
   }
   @keyframes pop{ from{ transform:scale(.86); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .logo{ display:flex; justify-content:center; }
-  .logo canvas{ width:min(300px, 76vw); height:auto; border-radius:26px; }
-  .card h1{ font-size:clamp(25px, 6.8vw, 33px); margin:10px 0 4px; color:#3c6b2e; letter-spacing:2px; }
-  .card h2{ font-size:clamp(26px, 7.5vw, 34px); margin:6px 0 2px; color:#3c6b2e; letter-spacing:2px; }
-  .sub{ color:#7a8a66; font-size:14px; line-height:1.5; margin:4px 6px 12px; }
-  .note{ color:#a6b09a; font-size:12px; margin:11px 0 0; }
+  .logo canvas{ width:min(240px, 72%); height:auto; border-radius:24px; }
+  .card h1{ font-size:clamp(24px, 6vw, 31px); margin:8px 0 4px; color:#3c6b2e; letter-spacing:2px; }
+  .card h2{ font-size:clamp(24px, 6vw, 32px); margin:6px 0 2px; color:#3c6b2e; letter-spacing:2px; }
+  .sub{ color:#7a8a66; font-size:14px; line-height:1.5; margin:4px 6px 10px; }
+  .note{ color:#a6b09a; font-size:11.5px; margin:10px 0 0; }
   .big-btn{
-    font-family:inherit; font-size:clamp(20px, 6vw, 25px); font-weight:800; letter-spacing:2px;
+    font-family:inherit; font-size:21px; font-weight:800; letter-spacing:2px;
     color:#fff; background:linear-gradient(180deg,#71cc5e,#4faa3f);
-    border:none; border-radius:999px; padding:12px 42px; margin-top:4px;
+    border:none; border-radius:999px; padding:11px 40px; margin-top:4px;
     box-shadow:0 6px 0 #3c8a31, 0 18px 36px rgba(70,120,40,.16);
     cursor:pointer; transition:transform .1s, box-shadow .1s;
   }
   .big-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #3c8a31; }
   .big-btn span{ display:inline-block; transform:translateY(-2px); margin-left:4px; }
-  .win-emoji{ font-size:42px; line-height:1; animation:bounce 1s infinite alternate ease-in-out; }
+  .win-emoji{ font-size:40px; line-height:1; animation:bounce 1s infinite alternate ease-in-out; }
   @keyframes bounce{ from{ transform:translateY(0) rotate(-6deg); } to{ transform:translateY(-8px) rotate(6deg); } }
-  .win-stars{ font-size:32px; letter-spacing:6px; line-height:1.2; margin:2px 0; }
+  .win-stars{ font-size:30px; letter-spacing:6px; line-height:1.2; margin:2px 0; }
   .win-stars .star-icon{ color:#d8decb; }
   .win-stars .star-icon.on{ color:var(--gold); text-shadow:0 0 12px rgba(255,200,60,.6); }
 
   /* ---------- 主页 / 选关 / 贴纸册 ---------- */
-  .home-overlay{ background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; padding-top:max(54px, calc(env(safe-area-inset-top) + 48px)); }
-  .home-card{ padding:16px 20px 14px; max-width:404px; }
-  .home-card .logo canvas{ width:min(196px, 50vw); border-radius:20px; }
-  .home-card h1{ font-size:clamp(24px, 6.5vw, 30px); margin:7px 0 2px; }
-  .home-card .sub{ font-size:13.5px; margin:2px 4px 9px; }
-  .home-card .big-btn{ margin-top:2px; padding:11px 40px; }
+  .home-overlay{ background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; }
+  .home-card{ padding:14px 18px 14px; max-width:404px; }
+  .home-card .logo canvas{ width:188px; max-width:60%; border-radius:20px; }
+  .home-card h1{ font-size:26px; margin:7px 0 2px; }
+  .home-card .sub{ font-size:13.5px; margin:2px 4px 8px; }
+  .home-card .big-btn{ margin-top:2px; padding:11px 38px; }
   .start-hint{ font-size:12px; color:#93a184; margin:6px 0 0; }
-  .home-section{ margin-top:11px; }
+  .home-section{ margin-top:10px; }
   .section-title{
     display:flex; align-items:center; justify-content:space-between;
-    color:#567a43; font-size:14px; font-weight:700; padding:0 3px; margin-bottom:7px;
+    color:#567a43; font-size:14px; font-weight:700; padding:0 3px; margin-bottom:6px;
   }
   .star-total{
     display:flex; align-items:center; gap:2px; background:#fff4c9;
@@ -133,9 +150,8 @@
 
   .level-scroll{
     max-width:340px; margin:0 auto; padding:4px 5px 6px;
-    max-height:clamp(140px, 23vh, 188px);
-    overflow-y:auto; -webkit-overflow-scrolling:touch;
-    touch-action:pan-y; overscroll-behavior:contain;
+    max-height:178px;
+    overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain;
     scrollbar-width:thin; scrollbar-color:rgba(120,150,90,.32) transparent;
   }
   .level-scroll::-webkit-scrollbar{ width:5px; }
@@ -170,14 +186,14 @@
     70%{ box-shadow:0 0 0 11px rgba(255,201,60,0); }
     100%{ box-shadow:0 0 0 0 rgba(255,201,60,0); }
   }
-  .level-num{ font-size:clamp(19px, 5.2vw, 24px); font-weight:800; line-height:1; }
+  .level-num{ font-size:21px; font-weight:800; line-height:1; }
   .level-stars{ display:flex; gap:1px; font-size:11px; line-height:1; }
   .level-card .star-icon{ color:rgba(122,90,18,.22); }
   .level-card .star-icon.on{ color:#e8a300; text-shadow:none; }
   .level-check{ position:absolute; top:4px; right:6px; font-size:11px; font-weight:800; color:#4d9440; }
 
   /* ---------- 4×2 贴纸收集册 ---------- */
-  .sticker-section{ margin-top:11px; }
+  .sticker-section{ margin-top:10px; }
   .sticker-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; max-width:330px; margin:0 auto; }
   .sticker-badge{
     position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -188,7 +204,6 @@
   .sticker-badge.locked{
     background:#f4efde; border:1.5px dashed #d6ccb0; box-shadow:inset 0 2px 5px rgba(120,100,60,.08);
   }
-  .sticker-badge.locked .sticker-emoji{ filter:brightness(0) opacity(.15); transform:scale(.9); }
   .sticker-lock{ position:absolute; top:4px; right:6px; font-size:10px; opacity:.5; }
   .sticker-badge.unlocked{
     background:linear-gradient(180deg,#fff9df,#ffefc0);
@@ -206,7 +221,7 @@
     font-size:26px; line-height:1;
     filter:drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff);
   }
-  .sticker-badge.locked .sticker-emoji{ filter:brightness(0) opacity(.15); }
+  .sticker-badge.locked .sticker-emoji{ filter:brightness(0) opacity(.15); transform:scale(.9); }
   .sticker-name{ font-size:11px; font-weight:700; color:#8f6914; margin-top:3px; line-height:1.1; }
   .sticker-need{ font-size:10px; font-weight:700; color:#b0a280; margin-top:3px; line-height:1.1; }
   .sticker-badge.just-unlocked{ animation:stickerGlow 1.3s ease-in-out 2; }
@@ -280,52 +295,43 @@
   }
   .link-btn:active{ color:#6e825c; }
 
-  /* ---------- 横屏分栏自适应（包含手机手动旋转横屏） ---------- */
-  #stage.landscape .home-overlay{ padding:max(8px, env(safe-area-inset-top)) 12px 10px; }
+  /* ---------- 横屏分栏 & 矮屏紧凑自适应（基于 #stage 逻辑宽高） ---------- */
   #stage.landscape .home-card{
-    max-width:min(700px, 96%); width:min(700px, 96%);
-    padding:12px 18px; display:grid;
+    max-width:min(740px, 100%); width:min(740px, 100%);
+    padding:12px 18px 10px; display:grid;
     grid-template-columns:1fr 1.18fr; column-gap:16px; align-items:center;
-    max-height:calc(100% - 10px);
   }
+  #stage.landscape .home-top-bar{ grid-column:1 / -1; margin-bottom:4px; }
   #stage.landscape .home-col-left{ display:flex; flex-direction:column; align-items:center; }
   #stage.landscape .home-col-right{ display:flex; flex-direction:column; min-width:0; }
-  #stage.landscape .home-card .logo canvas{ width:min(176px, 24vw); }
-  #stage.landscape .home-card h1{ font-size:22px; margin:5px 0 1px; }
-  #stage.landscape .home-card .sub{ font-size:12.5px; margin:0 0 7px; }
-  #stage.landscape .home-card .big-btn{ font-size:20px; padding:9px 32px; }
-  #stage.landscape .home-section{ margin-top:6px; }
-  #stage.landscape .home-col-right .home-section:first-child{ margin-top:0; }
-  #stage.landscape .level-scroll{ max-height:112px; }
-  #stage.landscape .sticker-row{ gap:6px; }
-  #stage.landscape .sticker-cutout{ width:32px; height:32px; }
-  #stage.landscape .sticker-emoji{ font-size:21px; }
-  #stage.landscape .sticker-badge{ padding:4px 2px 3px; border-radius:12px; }
   #stage.landscape .home-card .note{ grid-column:1 / -1; margin-top:6px; font-size:11px; }
+  #stage.landscape .home-col-right .home-section:first-child{ margin-top:0; }
+
+  #stage.compact-h .card{ padding:12px 16px 10px; border-radius:26px; }
+  #stage.compact-h .home-top-bar{ margin-bottom:2px; }
+  #stage.compact-h .home-tools .icon-btn{ width:34px; height:34px; }
+  #stage.compact-h .home-card .logo canvas{ width:152px; }
+  #stage.compact-h .home-card h1{ font-size:21px; margin:4px 0 1px; }
+  #stage.compact-h .home-card .sub{ font-size:12px; margin:0 0 6px; }
+  #stage.compact-h .home-card .big-btn{ font-size:19px; padding:8px 30px; }
+  #stage.compact-h .home-section{ margin-top:6px; }
+  #stage.compact-h .level-scroll{ max-height:106px; }
+  #stage.compact-h .sticker-row{ gap:6px; }
+  #stage.compact-h .sticker-cutout{ width:32px; height:32px; }
+  #stage.compact-h .sticker-emoji{ font-size:20px; }
+  #stage.compact-h .sticker-badge{ padding:4px 2px 3px; border-radius:12px; }
+  #stage.compact-h .win-emoji{ font-size:32px; }
+  #stage.compact-h .card h2{ font-size:24px; }
+  #stage.compact-h .new-sticker-orb{ width:58px; height:58px; font-size:34px; }
+
+  #stage.compact-w .pill{ padding:5px 10px; font-size:13.5px; }
+  #stage.compact-w .star-icons{ font-size:17px; }
+  #stage.compact-w .icon-btn{ width:38px; height:38px; }
+  #stage.compact-w .home-tools .icon-btn{ width:34px; height:34px; }
 
   @media (prefers-reduced-motion: reduce){
     .card, .win-emoji, .new-stickers, .new-sticker-card, .level-card.next::after,
     .new-sticker-orb::before, .sticker-badge.just-unlocked{ animation:none; }
-  }
-
-  @media (max-width:380px){
-    #hud{ padding-left:8px; padding-right:8px; }
-    .hud-left, .hud-right{ gap:5px; }
-    .pill{ padding:5px 10px; font-size:13.5px; }
-    .star-icons{ font-size:17px; }
-    .icon-btn{ width:38px; height:38px; }
-  }
-  @media (max-height:620px){
-    .card{ padding:14px 18px 14px; }
-    .logo canvas{ width:min(210px, 48vw); }
-    .card h1{ margin-top:6px; }
-    .sub{ margin-bottom:8px; }
-    .note{ margin-top:8px; }
-    .home-card .logo canvas{ width:min(160px, 42vw); }
-    .home-card h1{ font-size:23px; margin-top:4px; }
-    .home-card .sub{ margin-bottom:6px; }
-    .home-section{ margin-top:8px; }
-    .level-grid{ gap:6px; }
   }
 </style>
 </head>
@@ -349,12 +355,15 @@
 </div>
 
 <div id="home" class="overlay home-overlay">
-  <div class="home-tools">
-    <button class="icon-btn" id="btnHomeSound" aria-label="声音开关"></button>
-    <button class="icon-btn" id="btnHomeRotate" aria-label="旋转屏幕" title="旋转屏幕"></button>
-    <button class="icon-btn" id="btnHomeFull" aria-label="全屏" title="全屏"></button>
-  </div>
   <div class="card home-card">
+    <div class="home-top-bar">
+      <span class="home-tag">🥕 3岁+ 宝宝迷宫</span>
+      <div class="home-tools">
+        <button class="icon-btn" id="btnHomeSound" aria-label="声音开关"></button>
+        <button class="icon-btn" id="btnHomeRotate" aria-label="旋转屏幕" title="旋转屏幕"></button>
+        <button class="icon-btn" id="btnHomeFull" aria-label="全屏" title="全屏"></button>
+      </div>
+    </div>
     <div class="home-col-left">
       <div class="logo"><canvas id="logoScreen" width="600" height="360"></canvas></div>
       <h1>小兔找萝卜</h1>
@@ -1010,7 +1019,19 @@ function applyStageTransform() {
     stage.style.transform = 'none';
   }
   const { W, H } = stageSize();
-  stage.classList.toggle('landscape', W > H && H <= 520);
+  stage.classList.toggle('rotated', state.rotated);
+  stage.classList.toggle('landscape', W > H);
+  stage.classList.toggle('compact-h', H <= 540);
+  stage.classList.toggle('compact-w', W <= 380);
+}
+
+let layoutTimers = [];
+function scheduleLayoutSync() {
+  for (const tid of layoutTimers) clearTimeout(tid);
+  layoutTimers = [
+    setTimeout(() => { updateToolBtns(); computeLayout(); }, 120),
+    setTimeout(() => { updateToolBtns(); computeLayout(); }, 360),
+  ];
 }
 
 function computeLayout() {
@@ -1029,8 +1050,9 @@ function computeLayout() {
   canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const hudH = Math.min(62, Math.max(50, H * 0.068));
-  const availW = W - 12;
+  const hudH = Math.min(60, Math.max(48, H * 0.068));
+  const sidePad = state.rotated ? 44 : 12;
+  const availW = W - sidePad;
   const availH = H - hudH - 10;
   let cell = 80;
   let ox = W / 2;
@@ -2516,14 +2538,17 @@ function toggleSound() {
 function toggleRotate() {
   Sound.ensure();
   Sound.click();
+  resetPointer();
   state.rotated = !state.rotated;
   updateToolBtns();
   computeLayout();
+  scheduleLayoutSync();
 }
 
 async function toggleFullscreen() {
   Sound.ensure();
   Sound.click();
+  resetPointer();
   const root = document.documentElement;
   const curFull = getFullscreenEl();
   try {
@@ -2531,16 +2556,22 @@ async function toggleFullscreen() {
       if (document.exitFullscreen) await document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       updateToolBtns();
+      computeLayout();
+      scheduleLayoutSync();
       return;
     }
     if (root.requestFullscreen) {
       await root.requestFullscreen();
       updateToolBtns();
+      computeLayout();
+      scheduleLayoutSync();
       return;
     }
     if (root.webkitRequestFullscreen) {
       root.webkitRequestFullscreen();
       updateToolBtns();
+      computeLayout();
+      scheduleLayoutSync();
       return;
     }
   } catch (err) { /* Safari 不允许网页原生全屏 */ }
@@ -2614,8 +2645,14 @@ $('fsModal').addEventListener('click', e => {
   }
 });
 
-document.addEventListener('fullscreenchange', updateToolBtns);
-document.addEventListener('webkitfullscreenchange', updateToolBtns);
+function onViewportChange() {
+  updateToolBtns();
+  computeLayout();
+  scheduleLayoutSync();
+}
+document.addEventListener('fullscreenchange', onViewportChange);
+document.addEventListener('webkitfullscreenchange', onViewportChange);
+window.addEventListener('orientationchange', onViewportChange);
 
 /* =========================================================
    开场小插画
