@@ -192,8 +192,16 @@
   .level-card .star-icon.on{ color:#e8a300; text-shadow:none; }
   .level-check{ position:absolute; top:4px; right:6px; font-size:11px; font-weight:800; color:#4d9440; }
 
-  /* ---------- 4×2 贴纸收集册 ---------- */
+  /* ---------- 4×6 可滚动贴纸收集册 ---------- */
   .sticker-section{ margin-top:10px; }
+  .sticker-scroll{
+    max-width:340px; margin:0 auto; padding:4px 5px 6px;
+    max-height:158px;
+    overflow-y:auto; touch-action:pan-y; overscroll-behavior:contain;
+    scrollbar-width:thin; scrollbar-color:rgba(120,150,90,.32) transparent;
+  }
+  .sticker-scroll::-webkit-scrollbar{ width:5px; }
+  .sticker-scroll::-webkit-scrollbar-thumb{ background:rgba(120,150,90,.32); border-radius:999px; }
   .sticker-row{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; max-width:330px; margin:0 auto; }
   .sticker-badge{
     position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -275,8 +283,54 @@
     background:rgba(255,255,255,.8); padding:2px 10px; border-radius:999px;
   }
 
-  /* ---------- 贴纸大图预览 & 全屏指南 ---------- */
-  .modal-sticker-orb{ margin:8px auto 10px; width:104px; height:104px; font-size:62px; }
+  /* ---------- 贴纸大图放大查看 & 全屏指南 ---------- */
+  .sticker-modal-card{ width:min(390px, 100%); }
+  .sticker-stage{
+    position:relative; width:100%; height:222px; margin:6px auto 10px;
+    border-radius:24px; overflow:hidden;
+    background:radial-gradient(circle at center, #fffef8 0%, #fff4cf 72%, #ffe8a8 100%);
+    border:2px solid #ffe08a;
+    display:flex; align-items:center; justify-content:center;
+    touch-action:none; cursor:zoom-in;
+  }
+  .sticker-stage.zoomed{ cursor:grab; }
+  .sticker-stage.zoomed:active{ cursor:grabbing; }
+  .modal-sticker-orb{
+    position:relative; border-radius:50%; background:#fffdf5;
+    border:5px solid #fff;
+    box-shadow:0 6px 0 #e6c155, 0 12px 28px rgba(200,145,20,.24);
+    display:inline-flex; align-items:center; justify-content:center;
+    flex-shrink:0; transition:width .2s ease, height .2s ease, font-size .2s ease;
+    will-change:transform;
+  }
+  .sticker-zoom-bar{
+    display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:8px;
+  }
+  .zoom-btn{
+    width:36px; height:36px; border-radius:50%; border:none;
+    background:#fff4cf; color:#8f6510; font-size:18px; font-weight:800;
+    box-shadow:0 2px 0 #e3c266; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .zoom-btn:active{ transform:translateY(2px); box-shadow:none; }
+  .zoom-btn:disabled{ opacity:.42; cursor:default; }
+  .zoom-label{
+    min-width:58px; padding:4px 10px; border-radius:999px;
+    background:#f4efdc; color:#7a6735; font-size:12.5px; font-weight:800;
+  }
+  .sticker-nav-row{
+    display:flex; align-items:center; justify-content:center; gap:10px; margin-top:4px;
+  }
+  .nav-pill-btn{
+    width:40px; height:40px; border-radius:50%; border:none;
+    background:#eef7e4; color:#4f7a38; font-size:22px; font-weight:800; line-height:1;
+    box-shadow:0 3px 0 #c2dfa7; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .nav-pill-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #c2dfa7; }
+  .nav-pill-btn:disabled{ opacity:.38; cursor:default; }
+  .sticker-index-pill{ font-size:12px; font-weight:700; color:#8b977b; min-width:54px; }
+  .new-sticker-card{ cursor:pointer; }
   .guide-steps{
     text-align:left; background:#f7f2df; border-radius:18px; padding:12px 14px;
     margin:8px 0 14px; font-size:13.5px; line-height:1.65; color:#5e5437;
@@ -316,6 +370,7 @@
   #stage.compact-h .home-card .big-btn{ font-size:19px; padding:8px 30px; }
   #stage.compact-h .home-section{ margin-top:6px; }
   #stage.compact-h .level-scroll{ max-height:106px; }
+  #stage.compact-h .sticker-scroll{ max-height:104px; }
   #stage.compact-h .sticker-row{ gap:6px; }
   #stage.compact-h .sticker-cutout{ width:32px; height:32px; }
   #stage.compact-h .sticker-emoji{ font-size:20px; }
@@ -323,6 +378,7 @@
   #stage.compact-h .win-emoji{ font-size:32px; }
   #stage.compact-h .card h2{ font-size:24px; }
   #stage.compact-h .new-sticker-orb{ width:58px; height:58px; font-size:34px; }
+  #stage.compact-h .sticker-stage{ height:164px; margin:4px auto 8px; }
 
   #stage.compact-w .pill{ padding:5px 10px; font-size:13.5px; }
   #stage.compact-w .star-icons{ font-size:17px; }
@@ -376,7 +432,7 @@
       <div class="home-section">
         <div class="section-title">
           <span>选一关 <span class="section-hint" id="levelScrollHint"></span></span>
-          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max">/23</span></span>
+          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/71</span></span>
         </div>
         <div class="level-scroll" id="levelScroll">
           <div class="level-grid" id="levelGrid"></div>
@@ -386,10 +442,12 @@
 
       <div class="home-section sticker-section">
         <div class="section-title">
-          <span>我的贴纸册</span>
+          <span>我的贴纸册 <span class="section-hint">· 可滑动</span></span>
           <span class="section-hint" id="stickerHint">用星星解锁</span>
         </div>
-        <div class="sticker-row" id="stickerRow"></div>
+        <div class="sticker-scroll" id="stickerScroll">
+          <div class="sticker-row" id="stickerRow"></div>
+        </div>
       </div>
     </div>
 
@@ -417,10 +475,22 @@
 </div>
 
 <div id="stickerModal" class="overlay hidden">
-  <div class="card">
-    <div class="new-sticker-orb modal-sticker-orb" id="modalStickerIcon">🦋</div>
+  <div class="card sticker-modal-card">
     <h2 id="modalStickerName">蝴蝶贴纸</h2>
-    <p class="sub" id="modalStickerDesc">集齐 3 颗星星获得的贴纸</p>
+    <p class="sub" id="modalStickerDesc">集齐 2 颗星星收获的宝贝！</p>
+    <div class="sticker-stage" id="stickerStage" title="点击放大仔细看">
+      <div class="modal-sticker-orb" id="modalStickerOrb"><span id="modalStickerIcon">🦋</span></div>
+    </div>
+    <div class="sticker-zoom-bar">
+      <button class="zoom-btn" id="btnZoomOut" type="button" aria-label="缩小贴纸">−</button>
+      <span class="zoom-label" id="zoomLabel">1.0×</span>
+      <button class="zoom-btn" id="btnZoomIn" type="button" aria-label="放大贴纸">+</button>
+    </div>
+    <div class="sticker-nav-row">
+      <button class="nav-pill-btn" id="btnPrevSticker" type="button" aria-label="上一张贴纸">‹</button>
+      <span class="sticker-index-pill" id="modalStickerIndex">1 / 1</span>
+      <button class="nav-pill-btn" id="btnNextSticker" type="button" aria-label="下一张贴纸">›</button>
+    </div>
     <button class="big-btn" id="btnCloseSticker">真棒！</button>
   </div>
 </div>
@@ -599,18 +669,38 @@ const Sound = (() => {
    ========================================================= */
 const SAVE_KEY = 'migong.save.v1';
 const DEFAULT_LEVEL_CARDS = 8;
-const MAX_STARS = 23; // 第 1 关 2 颗 + 第 2~8 关各 3 颗
 let extraLevelCards = 0;
 const STICKERS = [
-  { need: 3, emoji: '🦋', name: '蝴蝶' },
-  { need: 6, emoji: '🌷', name: '小花' },
-  { need: 9, emoji: '🐞', name: '瓢虫' },
-  { need: 12, emoji: '🌈', name: '彩虹' },
-  { need: 15, emoji: '🐥', name: '小鸡' },
-  { need: 18, emoji: '🍄', name: '蘑菇' },
-  { need: 21, emoji: '🍰', name: '蛋糕' },
-  { need: 23, emoji: '👑', name: '皇冠' },
+  // 花园小伙伴
+  { need: 2,  emoji: '🦋', name: '蝴蝶',   desc: '拍着漂亮翅膀在花丛里跳舞的小蝴蝶' },
+  { need: 5,  emoji: '🌷', name: '小花',   desc: '晒着温暖太阳慢慢张开笑脸的小郁金香' },
+  { need: 8,  emoji: '🐞', name: '瓢虫',   desc: '背上有可爱圆点点的红衣小瓢虫' },
+  { need: 11, emoji: '🐝', name: '小蜜蜂', desc: '嗡嗡嗡采花蜜的勤劳小蜜蜂' },
+  { need: 14, emoji: '🐌', name: '小蜗牛', desc: '背着小房子慢悠悠散步的小蜗牛' },
+  { need: 17, emoji: '🍄', name: '蘑菇',   desc: '下完小雨从草地里冒出来的红伞蘑菇' },
+  // 可爱小动物
+  { need: 20, emoji: '🐥', name: '小鸡',   desc: '毛茸茸黄澄澄，叽叽叫着找妈妈的小鸡' },
+  { need: 23, emoji: '🐱', name: '小猫',   desc: '喜欢蹭蹭小兔胡须的乖巧小猫咪' },
+  { need: 26, emoji: '🐶', name: '小狗',   desc: '摇着小尾巴陪你一起玩耍的小狗狗' },
+  { need: 29, emoji: '🐼', name: '熊猫',   desc: '抱着竹子打滚的圆滚滚国宝大熊猫' },
+  { need: 32, emoji: '🦊', name: '小狐狸', desc: '有着蓬松大尾巴的聪明小红狐狸' },
+  { need: 35, emoji: '🦁', name: '小狮子', desc: '戴着金色毛围脖的勇敢小狮子' },
+  // 美味小点心
+  { need: 38, emoji: '🍓', name: '草莓',   desc: '红彤彤酸酸甜甜的大草莓' },
+  { need: 41, emoji: '🍉', name: '西瓜',   desc: '咬一口清凉又多汁的夏日大西瓜' },
+  { need: 44, emoji: '🍦', name: '冰淇淋', desc: '奶香浓郁的甜筒小冰淇淋' },
+  { need: 47, emoji: '🍩', name: '甜甜圈', desc: '撒满彩色糖粒的软乎乎甜甜圈' },
+  { need: 50, emoji: '🍰', name: '蛋糕',   desc: '顶着红草莓的奶油小蛋糕' },
+  { need: 53, emoji: '🍪', name: '小饼干', desc: '刚烤出炉香喷喷的巧克力小饼干' },
+  // 奇幻大冒险
+  { need: 56, emoji: '🌈', name: '彩虹',   desc: '架在蓝天上的七色大滑梯彩虹' },
+  { need: 59, emoji: '🚀', name: '小火箭', desc: '咻地一下飞向闪亮星星的小火箭' },
+  { need: 62, emoji: '🛸', name: '飞碟',   desc: '载着外星小客人来花园做客的飞碟' },
+  { need: 65, emoji: '🦄', name: '独角兽', desc: '额头有闪亮小角的神奇独角兽' },
+  { need: 68, emoji: '💎', name: '宝石',   desc: '在阳光下亮晶晶的蓝色魔法宝石' },
+  { need: 71, emoji: '👑', name: '皇冠',   desc: '送给迷宫小冠军的闪耀金皇冠！' },
 ];
+const MAX_STARS = STICKERS[STICKERS.length - 1].need;
 
 function levelStarCount(n) {
   return n === 1 ? 2 : 3;
@@ -2337,18 +2427,92 @@ function homeCardCount(cur) {
 }
 
 let stickerHintTimer = null;
+const ZOOM_STEPS = [1, 1.5, 2.2];
+const modalStickerState = {
+  unlockedList: [],
+  index: 0,
+  zoomIdx: 0,
+  panX: 0,
+  panY: 0,
+  drag: null,
+};
 
-function openStickerModal(st) {
+function renderStickerModalView() {
+  const st = modalStickerState.unlockedList[modalStickerState.index];
+  if (!st) return;
+  const zoom = ZOOM_STEPS[modalStickerState.zoomIdx];
+  const compact = $('stage').classList.contains('compact-h');
+  const baseOrb = compact ? 104 : 132;
+  const baseFont = compact ? 64 : 84;
+  const orb = $('modalStickerOrb');
+  const stageEl = $('stickerStage');
+
   $('modalStickerIcon').textContent = st.emoji;
   $('modalStickerName').textContent = st.name + '贴纸';
-  $('modalStickerDesc').textContent = '集齐 ' + st.need + ' 颗星星收获的宝贝！';
+  $('modalStickerDesc').textContent = st.desc + '（' + st.need + '★ 解锁）';
+
+  orb.style.width = Math.round(baseOrb * zoom) + 'px';
+  orb.style.height = Math.round(baseOrb * zoom) + 'px';
+  orb.style.fontSize = Math.round(baseFont * zoom) + 'px';
+
+  const maxPan = zoom <= 1 ? 0 : Math.round((zoom - 1) * (compact ? 60 : 75));
+  modalStickerState.panX = clamp(modalStickerState.panX, -maxPan, maxPan);
+  modalStickerState.panY = clamp(modalStickerState.panY, -maxPan, maxPan);
+  orb.style.transform = 'translate(' + modalStickerState.panX + 'px,' + modalStickerState.panY + 'px)';
+  stageEl.classList.toggle('zoomed', zoom > 1);
+
+  $('zoomLabel').textContent = zoom.toFixed(1) + '×';
+  $('btnZoomOut').disabled = modalStickerState.zoomIdx <= 0;
+  $('btnZoomIn').disabled = modalStickerState.zoomIdx >= ZOOM_STEPS.length - 1;
+
+  const totalUnlocked = modalStickerState.unlockedList.length;
+  $('modalStickerIndex').textContent = (modalStickerState.index + 1) + ' / ' + totalUnlocked;
+  $('btnPrevSticker').disabled = totalUnlocked <= 1;
+  $('btnNextSticker').disabled = totalUnlocked <= 1;
+}
+
+function openStickerModal(st) {
+  const total = albumStars();
+  const list = STICKERS.filter(s => total >= s.need);
+  if (!list.length) return;
+  const idx = Math.max(0, list.findIndex(s => s.need === st.need));
+  modalStickerState.unlockedList = list;
+  modalStickerState.index = idx;
+  modalStickerState.zoomIdx = 0;
+  modalStickerState.panX = 0;
+  modalStickerState.panY = 0;
+  renderStickerModalView();
   $('stickerModal').classList.remove('hidden');
   Sound.sticker();
+}
+
+function setStickerZoom(nextIdx) {
+  const clamped = clamp(nextIdx, 0, ZOOM_STEPS.length - 1);
+  if (clamped === modalStickerState.zoomIdx) return;
+  modalStickerState.zoomIdx = clamped;
+  if (clamped === 0) {
+    modalStickerState.panX = 0;
+    modalStickerState.panY = 0;
+  }
+  Sound.click();
+  renderStickerModalView();
+}
+
+function stepStickerModal(delta) {
+  const len = modalStickerState.unlockedList.length;
+  if (len <= 1) return;
+  modalStickerState.index = (modalStickerState.index + delta + len) % len;
+  modalStickerState.zoomIdx = 0;
+  modalStickerState.panX = 0;
+  modalStickerState.panY = 0;
+  Sound.click();
+  renderStickerModalView();
 }
 
 function renderHome() {
   const total = albumStars();
   $('totalStars').textContent = total;
+  $('totalMaxStars').textContent = '/' + MAX_STARS;
   const cur = clamp(save.current || 1, 1, 9999);
   $('startHint').textContent = cur > 1 ? '继续第 ' + cur + ' 关' : '从第 1 关开始';
 
@@ -2387,6 +2551,7 @@ function renderHome() {
   const unlockedCount = STICKERS.filter(s => total >= s.need).length;
   const row = $('stickerRow');
   row.innerHTML = '';
+  let justEl = null;
   for (const st of STICKERS) {
     const unlocked = total >= st.need;
     const just = state.justUnlocked.includes(st.need);
@@ -2417,16 +2582,20 @@ function renderHome() {
         clearTimeout(stickerHintTimer);
         stickerHintTimer = setTimeout(() => {
           const all = albumStars() >= MAX_STARS;
-          hint.textContent = all ? '8/8 全部集齐啦！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
+          hint.textContent = all ? STICKERS.length + '/' + STICKERS.length + ' 全部集齐！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
         }, 2000);
       }
     });
+    if (just && !justEl) justEl = el;
     row.appendChild(el);
+  }
+  if (justEl) {
+    requestAnimationFrame(() => justEl.scrollIntoView({ block: 'nearest' }));
   }
 
   const all = total >= MAX_STARS;
   const hint = $('stickerHint');
-  hint.textContent = all ? '8/8 全部集齐啦！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
+  hint.textContent = all ? STICKERS.length + '/' + STICKERS.length + ' 全部集齐！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
   hint.classList.toggle('all', all);
 }
 
@@ -2506,20 +2675,27 @@ function showWinOverlay() {
 
   const box = $('newStickers');
   const list = $('newStickerList');
+  list.innerHTML = '';
   if (state.newStickers.length) {
     box.classList.remove('hidden');
-    list.innerHTML = state.newStickers
-      .map(s =>
-        '<div class="new-sticker-card">' +
-          '<div class="new-sticker-orb">' + s.emoji + '</div>' +
-          '<span class="new-sticker-name">' + s.name + '</span>' +
-        '</div>'
-      )
-      .join('');
+    for (const st of state.newStickers) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'new-sticker-card';
+      card.style.background = 'none';
+      card.style.border = 'none';
+      card.style.padding = '0';
+      card.style.fontFamily = 'inherit';
+      card.title = '点击放大查看 ' + st.name;
+      card.innerHTML =
+        '<div class="new-sticker-orb">' + st.emoji + '</div>' +
+        '<span class="new-sticker-name">' + st.name + ' 🔍</span>';
+      card.addEventListener('click', () => openStickerModal(st));
+      list.appendChild(card);
+    }
     Sound.sticker();
   } else {
     box.classList.add('hidden');
-    list.innerHTML = '';
   }
 
   $('win').classList.remove('hidden');
@@ -2623,6 +2799,51 @@ $('btnCloseSticker').addEventListener('click', () => {
   Sound.click();
   $('stickerModal').classList.add('hidden');
 });
+$('btnZoomIn').addEventListener('click', () => setStickerZoom(modalStickerState.zoomIdx + 1));
+$('btnZoomOut').addEventListener('click', () => setStickerZoom(modalStickerState.zoomIdx - 1));
+$('btnPrevSticker').addEventListener('click', () => stepStickerModal(-1));
+$('btnNextSticker').addEventListener('click', () => stepStickerModal(1));
+
+const stickerStage = $('stickerStage');
+stickerStage.addEventListener('pointerdown', e => {
+  const pos = screenToStage(e.clientX, e.clientY);
+  modalStickerState.drag = {
+    id: e.pointerId,
+    sx: pos.x, sy: pos.y,
+    startPanX: modalStickerState.panX, startPanY: modalStickerState.panY,
+    moved: false,
+  };
+  try { stickerStage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  e.preventDefault();
+}, { passive: false });
+
+stickerStage.addEventListener('pointermove', e => {
+  const d = modalStickerState.drag;
+  if (!d || d.id !== e.pointerId) return;
+  const pos = screenToStage(e.clientX, e.clientY);
+  const dx = pos.x - d.sx;
+  const dy = pos.y - d.sy;
+  if (Math.hypot(dx, dy) > 8) d.moved = true;
+  if (d.moved && ZOOM_STEPS[modalStickerState.zoomIdx] > 1) {
+    modalStickerState.panX = d.startPanX + dx;
+    modalStickerState.panY = d.startPanY + dy;
+    renderStickerModalView();
+  }
+  e.preventDefault();
+}, { passive: false });
+
+function endStickerStageDrag(e) {
+  const d = modalStickerState.drag;
+  if (!d || (e.pointerId !== undefined && d.id !== e.pointerId)) return;
+  const wasClick = !d.moved;
+  modalStickerState.drag = null;
+  if (wasClick) {
+    setStickerZoom((modalStickerState.zoomIdx + 1) % ZOOM_STEPS.length);
+  }
+}
+stickerStage.addEventListener('pointerup', endStickerStageDrag);
+stickerStage.addEventListener('pointercancel', endStickerStageDrag);
+
 $('stickerModal').addEventListener('click', e => {
   if (e.target === $('stickerModal')) {
     Sound.click();
