@@ -385,9 +385,59 @@
   #stage.compact-w .icon-btn{ width:38px; height:38px; }
   #stage.compact-w .home-tools .icon-btn{ width:34px; height:34px; }
 
+  /* ---------- 钥匙状态药丸 ---------- */
+  .key-pill{
+    background:rgba(255,250,235,.94); border:1.5px solid #f6cf70;
+    color:#935811; font-weight:700; font-size:13.5px;
+    box-shadow:0 3px 0 rgba(180,110,20,.14), 0 8px 16px rgba(180,110,20,.08);
+  }
+  .key-pill.has-key{
+    background:#ffeaa8; border-color:#f0b429; color:#784102;
+    box-shadow:0 3px 0 #d99616, 0 8px 20px rgba(220,150,20,.24);
+    animation:keyPulse 1.2s infinite alternate ease-in-out;
+  }
+  .key-pill.door-opened{
+    background:#e6f8df; border-color:#83d86f; color:#2d691e;
+    box-shadow:0 3px 0 #6ebf5a;
+  }
+  @keyframes keyPulse{
+    from{ transform:scale(1); }
+    to{ transform:scale(1.06); }
+  }
+  .chap-badge{ font-size:15px; margin-right:3px; }
+  .level-badge{ font-size:11px; margin-right:2px; vertical-align:1px; }
+
+  /* ---------- 黄金宝剑攻击大按钮（对齐参考截图） ---------- */
+  .sword-btn{
+    position:absolute;
+    right:max(22px, calc(16px + env(safe-area-inset-right)));
+    bottom:max(20px, calc(16px + env(safe-area-inset-bottom)));
+    width:76px; height:76px; border-radius:24px;
+    border:3px solid #ffea8f;
+    background:linear-gradient(180deg, #f8c948 0%, #efa21f 100%);
+    box-shadow:0 6px 0 #be7812, 0 14px 28px rgba(170, 95, 10, .35);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:15;
+    user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .sword-btn:active{
+    transform:translateY(4px) scale(0.94);
+    box-shadow:0 2px 0 #be7812, 0 6px 14px rgba(170, 95, 10, .25);
+  }
+  .sword-btn.hidden{ display:none !important; }
+  .sword-svg{ pointer-events:none; filter:drop-shadow(0 2px 3px rgba(120,60,0,.2)); }
+
+  #stage.rotated .sword-btn{
+    right:max(24px, calc(16px + env(safe-area-inset-bottom)));
+    bottom:max(18px, calc(14px + env(safe-area-inset-left)));
+  }
+  #stage.compact-h .sword-btn{ width:64px; height:64px; border-radius:20px; }
+  #stage.compact-h .sword-svg{ width:32px; height:32px; }
+
   @media (prefers-reduced-motion: reduce){
     .card, .win-emoji, .new-stickers, .new-sticker-card, .level-card.next::after,
-    .new-sticker-orb::before, .sticker-badge.just-unlocked{ animation:none; }
+    .new-sticker-orb::before, .sticker-badge.just-unlocked, .key-pill.has-key{ animation:none; }
   }
 </style>
 </head>
@@ -395,10 +445,23 @@
 <div id="stage">
 <canvas id="game"></canvas>
 
+<!-- 底部右侧黄金宝剑攻击按钮（第21关勇士大冒险展示） -->
+<button class="sword-btn hidden" id="btnAttack" type="button" aria-label="挥剑攻击">
+  <svg viewBox="0 0 48 48" width="40" height="40" class="sword-svg">
+    <!-- 剑身（浅蓝与银白高光） -->
+    <path d="M35 7 L41 13 L21 33 L15 33 L13 31 L13 25 Z" fill="#68b5e8" stroke="#256f9e" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M35 7 L39 11 L21 29 L16 29 Z" fill="#ffffff" opacity="0.8"/>
+    <!-- 剑柄与护手（金木质感） -->
+    <path d="M11 29 L19 37 L16 40 L8 32 Z" fill="#d28f3a" stroke="#874e11" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle cx="9" cy="39" r="4.2" fill="#ffd55c" stroke="#874e11" stroke-width="2.2"/>
+  </svg>
+</button>
+
 <div id="hud" class="hidden">
   <div class="hud-left">
     <div class="pill" id="levelPill">第 1 关</div>
     <div class="pill star-pill" aria-label="已收集的星星"><span class="star-icons" id="starIcons"></span></div>
+    <div class="pill key-pill hidden" id="keyPill" aria-label="钥匙状态"><span class="key-icon" id="keyIcon">🗝️</span><span id="keyLabel">寻找钥匙</span></div>
   </div>
   <div class="hud-right">
     <button class="icon-btn" id="btnSound" aria-label="声音开关"></button>
@@ -648,6 +711,29 @@ const Sound = (() => {
         tone(f, 0.32, { type: 'sine', vol: 0.17, when: i * 0.08 });
       });
     },
+    keyPickup() {
+      tone(659.25, 0.10, { type: 'triangle', vol: 0.24 });
+      tone(880.00, 0.12, { type: 'triangle', vol: 0.25, when: 0.06 });
+      tone(1318.51, 0.26, { type: 'sine', vol: 0.28, when: 0.12 });
+    },
+    doorUnlock() {
+      tone(220, 0.08, { type: 'square', vol: 0.14, slide: 160 });
+      tone(587.33, 0.18, { type: 'triangle', vol: 0.22, when: 0.05 });
+      tone(880.00, 0.26, { type: 'sine', vol: 0.24, when: 0.12 });
+      tone(1174.66, 0.40, { type: 'sine', vol: 0.20, when: 0.18 });
+    },
+    swordSlash() {
+      tone(880, 0.12, { type: 'sine', vol: 0.24, slide: 240 });
+      tone(440, 0.08, { type: 'triangle', vol: 0.20, when: 0.02, slide: 120 });
+    },
+    monsterDefeat() {
+      tone(440, 0.09, { type: 'sine', vol: 0.22, slide: 880 });
+      tone(1046.5, 0.15, { type: 'triangle', vol: 0.24, when: 0.05 });
+      tone(1567.98, 0.24, { type: 'sine', vol: 0.20, when: 0.10 });
+    },
+    monsterBump() {
+      tone(220, 0.14, { type: 'sine', vol: 0.18, slide: 120 });
+    },
     startMusic() {
       if (!on) return;
       if (!ensure()) return;
@@ -757,6 +843,11 @@ const state = {
   goal: { c: 1, r: 1 },
   stars: [],
   collected: 0,
+  key: null,
+  door: null,
+  monsters: [],
+  sword: { attacking: false, attackT: 0, cooldown: 0 },
+  doorPrompt: { text: '', until: 0 },
   bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0 },
   pointer: {
     down: false, x: 0, y: 0, id: null,
@@ -809,12 +900,32 @@ const HANDMADE = {
 };
 
 const LEVEL_CONF = {
+  // 1~10关：小试身手（萌兔采胡萝卜）
   3: { rooms: [4, 3], braid: 0.9, loops: 1 },
   4: { rooms: [4, 3], braid: 0.8, loops: 1 },
   5: { rooms: [5, 3], braid: 0.7, loops: 1 },
   6: { rooms: [5, 3], braid: 0.55, loops: 1 },
   7: { rooms: [5, 4], braid: 0.45, loops: 1 },
   8: { rooms: [6, 4], braid: 0.35, loops: 0 },
+  9: { rooms: [6, 4], braid: 0.30, loops: 0 },
+  10: { rooms: [6, 4], braid: 0.25, loops: 0 },
+  // 11~20关：密室寻匙（金钥匙与木拱门）
+  11: { rooms: [5, 4], braid: 0.25, loops: 0 },
+  12: { rooms: [5, 4], braid: 0.22, loops: 0 },
+  13: { rooms: [6, 4], braid: 0.22, loops: 0 },
+  14: { rooms: [6, 4], braid: 0.18, loops: 0 },
+  15: { rooms: [6, 5], braid: 0.18, loops: 0 },
+  16: { rooms: [6, 5], braid: 0.15, loops: 0 },
+  17: { rooms: [6, 5], braid: 0.15, loops: 0 },
+  18: { rooms: [7, 5], braid: 0.12, loops: 0 },
+  19: { rooms: [7, 5], braid: 0.12, loops: 0 },
+  20: { rooms: [7, 5], braid: 0.10, loops: 0 },
+  // 21+关：勇士大冒险（呆萌小怪兽与宝剑攻击战斗）
+  21: { rooms: [6, 5], braid: 0.15, loops: 0 },
+  22: { rooms: [6, 5], braid: 0.15, loops: 0 },
+  23: { rooms: [7, 5], braid: 0.12, loops: 0 },
+  24: { rooms: [7, 5], braid: 0.12, loops: 0 },
+  25: { rooms: [7, 6], braid: 0.10, loops: 0 },
 };
 
 function generateMaze(roomsW, roomsH, braidChance, loopCount, rand) {
@@ -956,6 +1067,109 @@ function pickStars(grid, cols, rows, start, goal, count, rand) {
   return chosen;
 }
 
+function setupKeyAndDoor(grid, cols, rows, start, goal, rand) {
+  const fullPath = findPathTo(start.c, start.r, goal.c, goal.r);
+  if (!fullPath || fullPath.length < 4) return;
+
+  const minIdx = Math.max(2, Math.floor(fullPath.length * 0.45));
+  const maxIdx = Math.max(minIdx, fullPath.length - 2);
+  let bestDoor = null;
+
+  for (let idx = maxIdx; idx >= minIdx; idx--) {
+    const pt = fullPath[idx];
+    if (pt.c === start.c && pt.r === start.r) continue;
+    if (pt.c === goal.c && pt.r === goal.r) continue;
+
+    const saved = grid[pt.r][pt.c];
+    grid[pt.r][pt.c] = 1;
+    const testPath = findPathTo(start.c, start.r, goal.c, goal.r);
+    grid[pt.r][pt.c] = saved;
+
+    if (!testPath) {
+      bestDoor = { c: pt.c, r: pt.r };
+      break;
+    }
+  }
+
+  if (!bestDoor) {
+    const pt = fullPath[fullPath.length - 2];
+    bestDoor = { c: pt.c, r: pt.r };
+    for (const [dc, dr] of DIRS4) {
+      const nc = goal.c + dc, nr = goal.r + dr;
+      if (nc > 0 && nc < cols - 1 && nr > 0 && nr < rows - 1) {
+        if (!(nc === bestDoor.c && nr === bestDoor.r)) {
+          grid[nr][nc] = 1;
+        }
+      }
+    }
+  }
+
+  state.door = { c: bestDoor.c, r: bestDoor.r, open: false, openT: 0, shakeT: 0 };
+
+  const savedDoor = grid[bestDoor.r][bestDoor.c];
+  grid[bestDoor.r][bestDoor.c] = 1;
+  const dist = bfsDist(grid, cols, rows, start.c, start.r);
+  grid[bestDoor.r][bestDoor.c] = savedDoor;
+
+  const keyCands = [];
+  for (let r = 1; r < rows - 1; r++) {
+    for (let c = 1; c < cols - 1; c++) {
+      if (grid[r][c] !== 0) continue;
+      if (c === start.c && r === start.r) continue;
+      if (c === bestDoor.c && r === bestDoor.r) continue;
+      const d = dist[r * cols + c];
+      if (d >= 2) {
+        let openWays = 0;
+        for (const [dc, dr] of DIRS4) {
+          if (grid[r + dr][c + dc] === 0) openWays++;
+        }
+        keyCands.push({ c, r, dist: d, deadEnd: openWays === 1 ? 10 : 0 });
+      }
+    }
+  }
+
+  if (keyCands.length) {
+    keyCands.sort((a, b) => (b.dist + b.deadEnd + rand() * 4) - (a.dist + a.deadEnd + rand() * 4));
+    const chosen = keyCands[0];
+    state.key = { c: chosen.c, r: chosen.r, collected: false, phase: rand() * TAU };
+  } else {
+    const fb = fullPath[1];
+    state.key = { c: fb.c, r: fb.r, collected: false, phase: 0 };
+  }
+}
+
+function setupMonsters(grid, cols, rows, start, goal, rand) {
+  const count = Math.min(4, Math.max(2, Math.floor(2 + (state.level - 21) * 0.35)));
+  const cands = [];
+  for (let r = 1; r < rows - 1; r++) {
+    for (let c = 1; c < cols - 1; c++) {
+      if (grid[r][c] !== 0) continue;
+      if (Math.abs(c - start.c) + Math.abs(r - start.r) < 3) continue;
+      if (Math.abs(c - goal.c) + Math.abs(r - goal.r) < 2) continue;
+      if (state.key && c === state.key.c && r === state.key.r) continue;
+      if (state.door && c === state.door.c && r === state.door.r) continue;
+      cands.push({ c, r });
+    }
+  }
+  shuffle(cands, rand);
+  const chosen = [];
+  for (const cell of cands) {
+    if (chosen.every(m => Math.abs(m.c - cell.c) + Math.abs(m.r - cell.r) >= 2)) {
+      chosen.push(cell);
+      if (chosen.length >= count) break;
+    }
+  }
+  state.monsters = chosen.map(m => ({
+    c: m.c,
+    r: m.r,
+    x: m.c + 0.5,
+    y: m.r + 0.5,
+    alive: true,
+    hitT: 0,
+    bobPhase: rand() * TAU,
+  }));
+}
+
 /* =========================================================
    关卡装载
    ========================================================= */
@@ -990,7 +1204,7 @@ function startLevel(n) {
       }
     }
   } else {
-    const conf = LEVEL_CONF[n] || { rooms: [6, 4], braid: 0.3, loops: 0 };
+    const conf = LEVEL_CONF[n] || { rooms: [7, 6], braid: 0.10, loops: 0 };
     const { W, H } = stageSize();
     const portrait = H > W * 1.08;
     const rw = portrait ? Math.min(conf.rooms[0], conf.rooms[1]) : conf.rooms[0];
@@ -1008,6 +1222,20 @@ function startLevel(n) {
   state.grid = grid;
   state.start = start;
   state.goal = goal;
+
+  // 机制扩展：11~20关开启密室寻匙；21+关开启勇士大冒险
+  state.key = null;
+  state.door = null;
+  state.monsters = [];
+  state.sword = { attacking: false, attackT: 0, cooldown: 0 };
+  state.doorPrompt = { text: '', until: 0 };
+
+  if (n >= 11) {
+    setupKeyAndDoor(grid, cols, rows, start, goal, rand);
+  }
+  if (n >= 21) {
+    setupMonsters(grid, cols, rows, start, goal, rand);
+  }
 
   const starCount = n === 1 ? 2 : 3;
   state.stars = pickStars(grid, cols, rows, start, goal, starCount, rand)
@@ -1080,6 +1308,14 @@ function transposeMaze() {
   swapPair(state.start);
   swapPair(state.goal);
   for (const s of state.stars) swapPair(s);
+  if (state.key) swapPair(state.key);
+  if (state.door) swapPair(state.door);
+  if (state.monsters) {
+    for (const m of state.monsters) {
+      swapPair(m);
+      [m.x, m.y] = [m.y, m.x];
+    }
+  }
   if (state.hint.path) for (const p of state.hint.path) swapPair(p);
   if (state.tapPath) for (const p of state.tapPath) swapPair(p);
 
@@ -1143,10 +1379,11 @@ function computeLayout() {
   const hudH = Math.min(60, Math.max(48, H * 0.068));
   const sidePad = state.rotated ? 44 : 12;
   const availW = W - sidePad;
-  const availH = H - hudH - 10;
+  const bottomPad = state.level >= 21 ? Math.min(84, Math.max(70, H * 0.12)) : 10;
+  const availH = H - hudH - bottomPad;
   let cell = 80;
   let ox = W / 2;
-  let oy = hudH + availH / 2;
+  let oy = hudH + (availH - 10) / 2;
   if (state.cols && state.rows) {
     cell = Math.min(availW / (state.cols + 0.48), availH / (state.rows + 0.48));
     ox = (W - state.cols * cell) / 2;
@@ -1169,44 +1406,137 @@ function buildMazeCache() {
   const g = mazeCache.getContext('2d');
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // 奶油色小路
-  roundRectPath(g, 0, 0, w, h, cell * 0.55);
-  const floor = g.createLinearGradient(0, 0, 0, h);
-  floor.addColorStop(0, '#fff8e5');
-  floor.addColorStop(1, '#ffedc7');
-  g.fillStyle = floor;
-  g.fill();
+  const isWarrior = state.level >= 21;
+  const isChamber = state.level >= 11 && state.level <= 20;
 
-  // 地面的小沙点
-  const rand = mulberry32(7777);
-  g.fillStyle = 'rgba(214,178,110,.24)';
-  const dots = Math.floor(cols * rows * 1.2);
-  for (let i = 0; i < dots; i++) {
-    const x = (PAD + rand() * cols) * cell;
-    const y = (PAD + rand() * rows) * cell;
-    g.beginPath();
-    g.arc(x, y, Math.max(1, cell * 0.022), 0, TAU);
+  if (isWarrior) {
+    // 勇士大冒险：深色地下城堡通道（高度对齐参考图深灰紫褐色）
+    roundRectPath(g, 0, 0, w, h, cell * 0.45);
+    g.fillStyle = '#312532';
     g.fill();
-  }
 
-  // 灌木：先铺深色底（形成连续的树篱轮廓），再铺每格的叶子
-  const bushCells = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (state.grid[r][c] === 1) {
-        const seed = ((c * 73856093) ^ (r * 19349663) ^ state.seed) >>> 0;
-        bushCells.push({ x: (PAD + c) * cell, y: (PAD + r) * cell, seed });
+    const rand = mulberry32(7777);
+    g.fillStyle = 'rgba(255,255,255,.04)';
+    const dots = Math.floor(cols * rows * 1.5);
+    for (let i = 0; i < dots; i++) {
+      const x = (PAD + rand() * cols) * cell;
+      const y = (PAD + rand() * rows) * cell;
+      g.fillRect(x, y, Math.max(1, cell * 0.04), Math.max(1, cell * 0.02));
+    }
+
+    const stoneCells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (state.grid[r][c] === 1) {
+          const seed = ((c * 73856093) ^ (r * 19349663) ^ state.seed) >>> 0;
+          stoneCells.push({ x: (PAD + c) * cell, y: (PAD + r) * cell, seed });
+        }
       }
     }
-  }
-  for (const b of bushCells) drawBushBase(g, b.x, b.y, cell);
-  for (const b of bushCells) drawBushFill(g, b.x, b.y, cell, b.seed);
+    for (const b of stoneCells) drawStoneBase(g, b.x, b.y, cell, '#695140');
+    for (const b of stoneCells) drawStoneFill(g, b.x, b.y, cell, b.seed, ['#b59e8b', '#ab9481', '#bda592', '#a8917e']);
 
-  // 柔光内描边
-  g.strokeStyle = 'rgba(255,255,255,.28)';
-  g.lineWidth = Math.max(1.5, cell * 0.03);
-  roundRectPath(g, cell * 0.06, cell * 0.06, w - cell * 0.12, h - cell * 0.12, cell * 0.5);
-  g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.16)';
+    g.lineWidth = Math.max(1.5, cell * 0.03);
+    roundRectPath(g, cell * 0.06, cell * 0.06, w - cell * 0.12, h - cell * 0.12, cell * 0.4);
+    g.stroke();
+  } else if (isChamber) {
+    // 密室寻匙：砂岩地宫
+    roundRectPath(g, 0, 0, w, h, cell * 0.45);
+    g.fillStyle = '#f6edd9';
+    g.fill();
+
+    const rand = mulberry32(7777);
+    g.fillStyle = 'rgba(180,140,80,.18)';
+    const dots = Math.floor(cols * rows * 1.2);
+    for (let i = 0; i < dots; i++) {
+      const x = (PAD + rand() * cols) * cell;
+      const y = (PAD + rand() * rows) * cell;
+      g.beginPath();
+      g.arc(x, y, Math.max(1, cell * 0.022), 0, TAU);
+      g.fill();
+    }
+
+    const stoneCells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (state.grid[r][c] === 1) {
+          const seed = ((c * 73856093) ^ (r * 19349663) ^ state.seed) >>> 0;
+          stoneCells.push({ x: (PAD + c) * cell, y: (PAD + r) * cell, seed });
+        }
+      }
+    }
+    for (const b of stoneCells) drawStoneBase(g, b.x, b.y, cell, '#5e7250');
+    for (const b of stoneCells) drawStoneFill(g, b.x, b.y, cell, b.seed, ['#8ba37b', '#829972', '#94ad84', '#788f69']);
+
+    g.strokeStyle = 'rgba(255,255,255,.28)';
+    g.lineWidth = Math.max(1.5, cell * 0.03);
+    roundRectPath(g, cell * 0.06, cell * 0.06, w - cell * 0.12, h - cell * 0.12, cell * 0.4);
+    g.stroke();
+  } else {
+    // 奶油色小路与经典绿意灌木
+    roundRectPath(g, 0, 0, w, h, cell * 0.55);
+    const floor = g.createLinearGradient(0, 0, 0, h);
+    floor.addColorStop(0, '#fff8e5');
+    floor.addColorStop(1, '#ffedc7');
+    g.fillStyle = floor;
+    g.fill();
+
+    // 地面的小沙点
+    const rand = mulberry32(7777);
+    g.fillStyle = 'rgba(214,178,110,.24)';
+    const dots = Math.floor(cols * rows * 1.2);
+    for (let i = 0; i < dots; i++) {
+      const x = (PAD + rand() * cols) * cell;
+      const y = (PAD + rand() * rows) * cell;
+      g.beginPath();
+      g.arc(x, y, Math.max(1, cell * 0.022), 0, TAU);
+      g.fill();
+    }
+
+    // 灌木：先铺深色底（形成连续的树篱轮廓），再铺每格的叶子
+    const bushCells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (state.grid[r][c] === 1) {
+          const seed = ((c * 73856093) ^ (r * 19349663) ^ state.seed) >>> 0;
+          bushCells.push({ x: (PAD + c) * cell, y: (PAD + r) * cell, seed });
+        }
+      }
+    }
+    for (const b of bushCells) drawBushBase(g, b.x, b.y, cell);
+    for (const b of bushCells) drawBushFill(g, b.x, b.y, cell, b.seed);
+
+    // 柔光内描边
+    g.strokeStyle = 'rgba(255,255,255,.28)';
+    g.lineWidth = Math.max(1.5, cell * 0.03);
+    roundRectPath(g, cell * 0.06, cell * 0.06, w - cell * 0.12, h - cell * 0.12, cell * 0.5);
+    g.stroke();
+  }
+}
+
+function drawStoneBase(g, x, y, s, baseColor) {
+  g.fillStyle = baseColor || '#695140';
+  roundRectPath(g, x - 2, y - 2, s + 4, s + 4, s * 0.28);
+  g.fill();
+}
+
+function drawStoneFill(g, x, y, s, seed, stonePalette) {
+  const rnd = mulberry32(seed);
+  const palette = stonePalette || ['#b59e8b', '#ab9481', '#bda592', '#a8917e'];
+  g.fillStyle = palette[(rnd() * palette.length) | 0];
+  roundRectPath(g, x + 0.5, y + 0.5, s - 1, s - 1, s * 0.24);
+  g.fill();
+
+  g.fillStyle = 'rgba(30,20,15,.18)';
+  g.beginPath();
+  g.ellipse(x + s * 0.5, y + s * 0.92, s * 0.46, s * 0.20, 0, 0, TAU);
+  g.fill();
+
+  g.fillStyle = 'rgba(255,255,255,.18)';
+  g.beginPath();
+  g.ellipse(x + s * 0.4, y + s * 0.22, s * 0.32, s * 0.11, -0.4, 0, TAU);
+  g.fill();
 }
 
 /* =========================================================
@@ -1441,7 +1771,518 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
   g.fill();
   g.stroke();
 
+  // 探险装备（11~20关密室寻匙模式，选项A小兔进阶）
+  if (opts.explorer) {
+    g.fillStyle = '#b27236';
+    g.strokeStyle = '#633711';
+    g.lineWidth = Math.max(1.2, s * 0.018);
+    roundRectPath(g, -s * 0.16, s * 0.05, s * 0.12, s * 0.13, s * 0.04);
+    g.fill(); g.stroke();
+    g.fillStyle = '#f5c442';
+    g.beginPath();
+    g.arc(-s * 0.10, s * 0.14, s * 0.024, 0, TAU);
+    g.fill();
+
+    g.save();
+    g.translate(s * 0.08, -s * 0.32);
+    g.rotate(0.12);
+    g.fillStyle = '#488c42';
+    g.strokeStyle = '#285824';
+    g.lineWidth = Math.max(1.2, s * 0.018);
+    g.beginPath();
+    g.ellipse(0, 0, s * 0.13, s * 0.05, 0, 0, TAU);
+    g.fill(); g.stroke();
+    g.fillStyle = '#f26242';
+    g.beginPath();
+    g.ellipse(-s * 0.06, -s * 0.05, s * 0.025, s * 0.07, -0.4, 0, TAU);
+    g.fill();
+    g.restore();
+  }
+
   g.restore();
+}
+
+/* =========================================================
+   21+关红脸剑盾小勇士（高度还原参考截图）
+   ========================================================= */
+function drawWarriorArt(g, x, y, s, t, opts = {}) {
+  const face = opts.face || 1;
+  const moving = !!opts.moving;
+  const bump = opts.bump || 0;
+  const attacking = !!opts.attacking;
+  const attackProgress = opts.attackProgress || 0;
+
+  const bob = moving ? Math.abs(Math.sin(t * 11)) * s * 0.06 : Math.sin(t * 2.2) * s * 0.02;
+  const squash = bump > 0 ? Math.sin((bump / 0.18) * Math.PI) * 0.08 : 0;
+
+  g.save();
+  g.translate(x, y + s * 0.02);
+
+  // 地面椭圆软投影
+  g.fillStyle = 'rgba(40, 20, 25, 0.28)';
+  g.beginPath();
+  g.ellipse(0, s * 0.36, s * 0.28, s * 0.08, 0, 0, TAU);
+  g.fill();
+
+  g.translate(0, -bob);
+  g.scale(face, 1 + squash);
+
+  // 1. 小黄靴（两只脚步行动画）
+  const stepL = moving ? Math.sin(t * 11) * s * 0.06 : 0;
+  const stepR = moving ? -Math.sin(t * 11) * s * 0.06 : 0;
+  g.fillStyle = '#fabc37';
+  g.strokeStyle = '#9c6508';
+  g.lineWidth = Math.max(1.2, s * 0.02);
+  roundRectPath(g, -s * 0.22, s * 0.24 + stepL, s * 0.16, s * 0.12, s * 0.05);
+  g.fill(); g.stroke();
+  roundRectPath(g, s * 0.06, s * 0.24 + stepR, s * 0.16, s * 0.12, s * 0.05);
+  g.fill(); g.stroke();
+
+  // 2. 红色方圆脸萌身体（截图主体）
+  const bodyW = s * 0.54;
+  const bodyH = s * 0.52;
+  const bodyGrad = g.createLinearGradient(0, -bodyH / 2, 0, bodyH / 2);
+  bodyGrad.addColorStop(0, '#f25942');
+  bodyGrad.addColorStop(1, '#db3824');
+  g.fillStyle = bodyGrad;
+  g.strokeStyle = '#85190b';
+  g.lineWidth = Math.max(1.6, s * 0.026);
+  roundRectPath(g, -bodyW / 2, -bodyH / 2, bodyW, bodyH, s * 0.18);
+  g.fill();
+  g.stroke();
+
+  // 3. 坚毅呆萌的大眼睛与黑色粗眉毛（完全对齐截图）
+  const eyeR = s * 0.082;
+  for (const dir of [-1, 1]) {
+    const ex = dir * s * 0.14;
+    const ey = -s * 0.05;
+
+    // 眼白
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(ex, ey, eyeR, 0, TAU);
+    g.fill();
+
+    // 瞳孔
+    g.fillStyle = '#1e1411';
+    g.beginPath();
+    g.arc(ex + dir * 1.5, ey, eyeR * 0.58, 0, TAU);
+    g.fill();
+
+    // 瞳孔双高光
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(ex + dir * 1.5 - 1.5, ey - 2, eyeR * 0.24, 0, TAU);
+    g.fill();
+
+    // 坚毅的黑色粗眉毛
+    g.strokeStyle = '#1e1411';
+    g.lineWidth = Math.max(2.4, s * 0.04);
+    g.lineCap = 'round';
+    g.beginPath();
+    g.moveTo(ex - dir * eyeR * 0.8, ey - eyeR * 1.1 + (dir > 0 ? 0 : 2));
+    g.lineTo(ex + dir * eyeR * 1.0, ey - eyeR * 1.3 - (dir > 0 ? 3 : 0));
+    g.stroke();
+  }
+
+  // 4. 左手圆形盾牌（参考截图）
+  g.save();
+  g.translate(-bodyW * 0.52, s * 0.06);
+  g.fillStyle = '#df9b4f';
+  g.strokeStyle = '#8a4b12';
+  g.lineWidth = Math.max(1.5, s * 0.024);
+  g.beginPath();
+  g.arc(0, 0, s * 0.15, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#fabc37';
+  g.beginPath();
+  g.arc(0, 0, s * 0.05, 0, TAU);
+  g.fill();
+  g.restore();
+
+  // 5. 右手高举宝剑（参考截图高举向上，挥动时劈砍）
+  g.save();
+  g.translate(bodyW * 0.44, -s * 0.02);
+  let swordAngle = -Math.PI * 0.15;
+  if (attacking) {
+    swordAngle = -Math.PI * 0.15 + Math.sin(attackProgress * Math.PI) * Math.PI * 0.75;
+  }
+  g.rotate(swordAngle);
+
+  // 银蓝利刃
+  const bladeL = s * 0.44;
+  const bladeW = s * 0.11;
+  const bladeGrad = g.createLinearGradient(0, -bladeL, bladeW, 0);
+  bladeGrad.addColorStop(0, '#ffffff');
+  bladeGrad.addColorStop(0.4, '#76c4f0');
+  bladeGrad.addColorStop(1, '#4293ca');
+  g.fillStyle = bladeGrad;
+  g.strokeStyle = '#205c86';
+  g.lineWidth = Math.max(1.2, s * 0.02);
+  g.beginPath();
+  g.moveTo(-bladeW / 2, 0);
+  g.lineTo(-bladeW / 2, -bladeL * 0.8);
+  g.lineTo(0, -bladeL);
+  g.lineTo(bladeW / 2, -bladeL * 0.8);
+  g.lineTo(bladeW / 2, 0);
+  g.closePath();
+  g.fill();
+  g.stroke();
+
+  // 金色剑格与剑柄
+  g.fillStyle = '#fabc37';
+  g.fillRect(-bladeW * 0.9, 0, bladeW * 1.8, s * 0.04);
+  g.fillStyle = '#d28f3a';
+  g.fillRect(-bladeW * 0.3, s * 0.04, bladeW * 0.6, s * 0.10);
+  g.fillStyle = '#fabc37';
+  g.beginPath();
+  g.arc(0, s * 0.16, s * 0.035, 0, TAU);
+  g.fill();
+  g.restore();
+
+  // 6. 挥剑光效（圆弧剑气）
+  if (attacking) {
+    drawSwordSlashArc(g, bodyW * 0.4, -s * 0.05, s, attackProgress);
+  }
+
+  g.restore();
+}
+
+function drawSwordSlashArc(g, x, y, s, progress) {
+  g.save();
+  g.translate(x, y);
+  const r = s * 0.68;
+  const startA = -Math.PI * 0.45;
+  const endA = startA + progress * Math.PI * 0.9;
+
+  g.strokeStyle = 'rgba(255, 255, 255, ' + (1 - progress * 0.6).toFixed(2) + ')';
+  g.lineWidth = Math.max(3, s * 0.06);
+  g.lineCap = 'round';
+  g.beginPath();
+  g.arc(0, 0, r, startA, endA);
+  g.stroke();
+
+  g.strokeStyle = 'rgba(88, 209, 248, ' + (1 - progress * 0.8).toFixed(2) + ')';
+  g.lineWidth = Math.max(5, s * 0.12);
+  g.beginPath();
+  g.arc(0, 0, r * 0.95, startA, endA);
+  g.stroke();
+
+  const tipX = Math.cos(endA) * r;
+  const tipY = Math.sin(endA) * r;
+  g.fillStyle = '#ffffff';
+  g.beginPath();
+  g.arc(tipX, tipY, s * 0.04, 0, TAU);
+  g.fill();
+  g.restore();
+}
+
+/* =========================================================
+   金钥匙、木拱门、呆萌小怪兽绘制（完全对齐参考截图）
+   ========================================================= */
+function drawKeyArt(g, x, y, s, t) {
+  g.save();
+  const bob = Math.sin(t * 3.5) * s * 0.08;
+  g.translate(x, y + bob);
+
+  // 金色柔光呼吸光晕
+  g.fillStyle = 'rgba(255, 215, 60, 0.28)';
+  g.beginPath();
+  g.arc(0, 0, s * 0.36, 0, TAU);
+  g.fill();
+
+  // 阴影
+  g.fillStyle = 'rgba(40, 25, 10, 0.22)';
+  g.beginPath();
+  g.ellipse(0, s * 0.36 - bob * 0.5, s * 0.25, s * 0.08, 0, 0, TAU);
+  g.fill();
+
+  g.save();
+  g.rotate(-Math.PI / 6);
+  const gold = g.createLinearGradient(-s * 0.3, -s * 0.3, s * 0.3, s * 0.3);
+  gold.addColorStop(0, '#ffe57f');
+  gold.addColorStop(0.4, '#f8b825');
+  gold.addColorStop(1, '#c97e0e');
+  g.fillStyle = gold;
+  g.strokeStyle = '#8c5205';
+  g.lineWidth = Math.max(1.4, s * 0.03);
+  g.lineJoin = 'round';
+  g.lineCap = 'round';
+
+  // 钥匙环
+  g.beginPath();
+  g.arc(-s * 0.16, 0, s * 0.16, 0, TAU);
+  g.fill();
+  g.stroke();
+
+  g.fillStyle = '#fff9e6';
+  g.beginPath();
+  g.arc(-s * 0.16, 0, s * 0.075, 0, TAU);
+  g.fill();
+  g.stroke();
+
+  // 钥匙柄
+  g.fillStyle = gold;
+  g.fillRect(-s * 0.04, -s * 0.05, s * 0.32, s * 0.10);
+  g.strokeRect(-s * 0.04, -s * 0.05, s * 0.32, s * 0.10);
+
+  // 钥匙齿
+  g.fillRect(s * 0.16, s * 0.05, s * 0.07, s * 0.12);
+  g.strokeRect(s * 0.16, s * 0.05, s * 0.07, s * 0.12);
+  g.fillRect(s * 0.24, s * 0.05, s * 0.07, s * 0.08);
+  g.strokeRect(s * 0.24, s * 0.05, s * 0.07, s * 0.08);
+
+  if ((t * 2.5) % 2 < 0.6) {
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(-s * 0.22, -s * 0.08, s * 0.035, 0, TAU);
+    g.fill();
+  }
+  g.restore();
+  g.restore();
+}
+
+function drawDoorArt(g, x, y, s, t, door) {
+  g.save();
+  let shakeX = 0;
+  if (door.shakeT > 0) {
+    shakeX = Math.sin(door.shakeT * 45) * s * 0.08;
+  }
+  g.translate(x + shakeX, y);
+
+  if (door.open) {
+    if (door.openT <= 0) {
+      g.restore();
+      return;
+    }
+    const scale = door.openT / 0.6;
+    g.scale(scale, scale);
+    g.globalAlpha = Math.max(0, scale);
+  }
+
+  const w = s * 0.88;
+  const h = s * 0.94;
+  const archR = w * 0.44;
+
+  // 门洞外深色石框
+  g.fillStyle = '#6b4320';
+  g.beginPath();
+  g.moveTo(-w / 2, h / 2);
+  g.lineTo(-w / 2, -h / 2 + archR);
+  g.arc(0, -h / 2 + archR, archR, Math.PI, 0, false);
+  g.lineTo(w / 2, h / 2);
+  g.closePath();
+  g.fill();
+
+  // 木门扇（暖棕木色，参考图）
+  const inW = w * 0.84;
+  const inH = h * 0.86;
+  const inArch = inW * 0.44;
+  const wood = g.createLinearGradient(0, -inH / 2, 0, inH / 2);
+  wood.addColorStop(0, '#d6904e');
+  wood.addColorStop(0.5, '#bf7b38');
+  wood.addColorStop(1, '#9e5f24');
+  g.fillStyle = wood;
+  g.beginPath();
+  g.moveTo(-inW / 2, inH / 2);
+  g.lineTo(-inW / 2, -inH / 2 + inArch);
+  g.arc(0, -inH / 2 + inArch, inArch, Math.PI, 0, false);
+  g.lineTo(inW / 2, inH / 2);
+  g.closePath();
+  g.fill();
+
+  // 垂直木板拼接线（参考图质感）
+  g.strokeStyle = 'rgba(90, 48, 12, 0.45)';
+  g.lineWidth = Math.max(1.4, s * 0.024);
+  const plankSpacing = inW / 4;
+  for (let i = 1; i < 4; i++) {
+    const px = -inW / 2 + i * plankSpacing;
+    g.beginPath();
+    g.moveTo(px, -inH / 2 + inArch * 0.5);
+    g.lineTo(px, inH / 2);
+    g.stroke();
+  }
+
+  // 门框黑色大钥匙孔（与截图一致）
+  g.fillStyle = '#2b1b11';
+  g.beginPath();
+  g.arc(-inW * 0.18, 0, s * 0.065, 0, TAU);
+  g.fill();
+  g.beginPath();
+  g.moveTo(-inW * 0.18 - s * 0.045, s * 0.03);
+  g.lineTo(-inW * 0.18 + s * 0.045, s * 0.03);
+  g.lineTo(-inW * 0.18 + s * 0.065, s * 0.14);
+  g.lineTo(-inW * 0.18 - s * 0.065, s * 0.14);
+  g.closePath();
+  g.fill();
+
+  // 提示钥匙漂浮气泡（若有）
+  if (state.doorPrompt && state.doorPrompt.until > performance.now() && !door.open) {
+    g.save();
+    g.translate(0, -h * 0.72);
+    g.fillStyle = 'rgba(255,255,255,0.92)';
+    g.strokeStyle = '#c97e0e';
+    g.lineWidth = 1.6;
+    roundRectPath(g, -s * 0.52, -s * 0.22, s * 1.04, s * 0.38, s * 0.16);
+    g.fill();
+    g.stroke();
+    g.fillStyle = '#7a3e00';
+    g.font = `bold ${Math.max(11, s * 0.22)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(state.doorPrompt.text, 0, 0);
+    g.restore();
+  }
+
+  g.restore();
+}
+
+function drawMonsterArt(g, x, y, s, t, m) {
+  g.save();
+  const bob = Math.sin(t * 3.2 + m.bobPhase) * s * 0.06;
+  g.translate(x, y + bob);
+
+  // 受击消散动画
+  if (!m.alive) {
+    if (m.hitT <= 0) {
+      g.restore();
+      return;
+    }
+    const k = m.hitT / 0.32;
+    g.scale(1 + (1 - k) * 0.4, 1 + (1 - k) * 0.4);
+    g.globalAlpha = Math.max(0, k);
+  }
+
+  // 地面投影
+  g.fillStyle = 'rgba(20, 45, 60, 0.22)';
+  g.beginPath();
+  g.ellipse(0, s * 0.34 - bob * 0.6, s * 0.28, s * 0.09, 0, 0, TAU);
+  g.fill();
+
+  const r = s * 0.32;
+
+  // 天蓝色圆滚滚身体（参考图主色调）
+  const skin = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+  skin.addColorStop(0, '#58d1f8');
+  skin.addColorStop(0.7, '#38b2dc');
+  skin.addColorStop(1, '#258ea2');
+  g.fillStyle = skin;
+  g.beginPath();
+  g.arc(0, 0, r, 0, TAU);
+  g.fill();
+
+  // 上方一对大眼睛（白底 + 黑瞳孔 + 双高光，朝上方看，萌度拉满）
+  const eyeR = r * 0.28;
+  const eyeY = -r * 0.22;
+  const eyeSpacing = r * 0.30;
+
+  for (const dir of [-1, 1]) {
+    const ex = dir * eyeSpacing;
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(ex, eyeY, eyeR, 0, TAU);
+    g.fill();
+    g.strokeStyle = '#1b5e73';
+    g.lineWidth = Math.max(1, s * 0.018);
+    g.stroke();
+
+    g.fillStyle = '#1c2938';
+    g.beginPath();
+    g.arc(ex + dir * 0.5, eyeY - eyeR * 0.25, eyeR * 0.55, 0, TAU);
+    g.fill();
+
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(ex + dir * 0.5 - 1.5, eyeY - eyeR * 0.35, eyeR * 0.22, 0, TAU);
+    g.arc(ex + dir * 0.5 + 1.2, eyeY - eyeR * 0.15, eyeR * 0.12, 0, TAU);
+    g.fill();
+  }
+
+  // 下方标志性大嘴巴与两排白色尖锐锯齿牙齿（完全对齐截图！）
+  const mouthY = r * 0.32;
+  const mouthW = r * 1.35;
+  const mouthH = r * 0.42;
+
+  g.fillStyle = '#1b556b';
+  g.beginPath();
+  g.ellipse(0, mouthY, mouthW / 2, mouthH / 2, 0, 0, TAU);
+  g.fill();
+
+  g.fillStyle = '#ffffff';
+  const toothCount = 5;
+  const step = mouthW / toothCount;
+  g.beginPath();
+  for (let i = 0; i < toothCount; i++) {
+    const tx = -mouthW / 2 + i * step;
+    g.moveTo(tx, mouthY - mouthH * 0.4);
+    g.lineTo(tx + step / 2, mouthY + mouthH * 0.15);
+    g.lineTo(tx + step, mouthY - mouthH * 0.4);
+  }
+  g.closePath();
+  g.fill();
+
+  g.beginPath();
+  for (let i = 0; i < toothCount; i++) {
+    const tx = -mouthW / 2 + i * step;
+    g.moveTo(tx, mouthY + mouthH * 0.4);
+    g.lineTo(tx + step / 2, mouthY - mouthH * 0.1);
+    g.lineTo(tx + step, mouthY + mouthH * 0.4);
+  }
+  g.closePath();
+  g.fill();
+
+  g.restore();
+}
+
+function addMonsterBurst(x, y, cell) {
+  const g = 180;
+  const colors = ['#62d3ff', '#ffffff', '#ffd15c', '#ff789a'];
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * TAU + Math.random() * 0.3;
+    const spd = 60 + Math.random() * 120;
+    state.particles.push({
+      x, y,
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd - 30,
+      g,
+      drag: 1.5,
+      size: Math.max(3, cell * (0.05 + Math.random() * 0.05)),
+      w: Math.max(4, cell * 0.08),
+      h: Math.max(4, cell * 0.08),
+      color: colors[i % colors.length],
+      kind: i % 2 === 0 ? 'star' : 'spark',
+      rot: Math.random() * TAU,
+      vr: (Math.random() - 0.5) * 8,
+      life: 0.45 + Math.random() * 0.25,
+      t: 0,
+    });
+  }
+}
+
+function addDoorOpenBurst(x, y, cell) {
+  const g = 160;
+  const colors = ['#ffd65c', '#ffffff', '#e3952f', '#71cc5e'];
+  for (let i = 0; i < 20; i++) {
+    const a = (i / 20) * TAU + Math.random() * 0.2;
+    const spd = 50 + Math.random() * 110;
+    state.particles.push({
+      x, y,
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd - 20,
+      g,
+      drag: 1.4,
+      size: Math.max(3, cell * (0.04 + Math.random() * 0.05)),
+      w: Math.max(4, cell * 0.08),
+      h: Math.max(4, cell * 0.08),
+      color: colors[i % colors.length],
+      kind: 'star',
+      rot: Math.random() * TAU,
+      vr: (Math.random() - 0.5) * 8,
+      life: 0.5 + Math.random() * 0.25,
+      t: 0,
+    });
+  }
 }
 
 function drawCarrotArt(g, x, y, s, t) {
@@ -1731,7 +2572,9 @@ function drawParticles() {
    ========================================================= */
 function isSolid(c, r) {
   if (c < 0 || r < 0 || c >= state.cols || r >= state.rows) return true;
-  return state.grid[r][c] === 1;
+  if (state.grid[r][c] === 1) return true;
+  if (state.door && !state.door.open && state.door.c === c && state.door.r === r) return true;
+  return false;
 }
 
 function findPathTo(fromX, fromY, targetC, targetR) {
@@ -1755,7 +2598,7 @@ function findPathTo(fromX, fromY, targetC, targetR) {
     for (const [dc, dr] of DIRS4) {
       const nc = c + dc, nr = r + dr;
       if (nc < 0 || nr < 0 || nc >= cols || nr >= rows) continue;
-      if (state.grid[nr][nc] !== 0) continue;
+      if (isSolid(nc, nr)) continue;
       const ni = nr * cols + nc;
       if (prev[ni] !== -1) continue;
       prev[ni] = idx;
@@ -1776,6 +2619,14 @@ function findPathTo(fromX, fromY, targetC, targetR) {
 }
 
 function findPath(fromX, fromY) {
+  if (state.key && !state.key.collected) {
+    const toKey = findPathTo(fromX, fromY, state.key.c, state.key.r);
+    if (toKey && toKey.length > 1) return toKey;
+  }
+  if (state.door && !state.door.open) {
+    const toDoor = findPathTo(fromX, fromY, state.door.c, state.door.r);
+    if (toDoor && toDoor.length > 1) return toDoor;
+  }
   return findPathTo(fromX, fromY, state.goal.c, state.goal.r);
 }
 
@@ -1983,6 +2834,20 @@ function checkCollect() {
       state.progressTimer = 0;
     }
   });
+
+  // 拾取金钥匙
+  if (state.key && !state.key.collected) {
+    const kdx = b.x - (state.key.c + 0.5);
+    const kdy = b.y - (state.key.r + 0.5);
+    if (kdx * kdx + kdy * kdy < 0.28) {
+      state.key.collected = true;
+      Sound.keyPickup();
+      addSparkle(ox + (state.key.c + 0.5) * cell, oy + (state.key.r + 0.5) * cell);
+      updateKeyHud();
+      state.lastProgress = { x: b.x, y: b.y };
+      state.progressTimer = 0;
+    }
+  }
 }
 
 function doWin() {
@@ -2051,6 +2916,41 @@ function updateProgress(dt, now) {
   if (state.hint.path && now > state.hint.until) state.hint.path = null;
 }
 
+function heroAttack() {
+  if (state.phase !== 'play') return;
+  if (state.level < 21) return;
+  if (state.sword.cooldown > 0) return;
+
+  state.sword.attacking = true;
+  state.sword.attackT = 0.28;
+  state.sword.cooldown = 0.35;
+  Sound.swordSlash();
+
+  const b = state.bunny;
+  const attackRadius = 1.35;
+  const { cell, ox, oy } = state.layout;
+
+  let hitAny = false;
+  if (state.monsters && state.monsters.length) {
+    for (const m of state.monsters) {
+      if (!m.alive) continue;
+      const dx = m.x - b.x;
+      const dy = m.y - b.y;
+      const d = Math.hypot(dx, dy);
+      if (d <= attackRadius) {
+        m.alive = false;
+        m.hitT = 0.32;
+        hitAny = true;
+        addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell);
+      }
+    }
+  }
+
+  if (hitAny) {
+    Sound.monsterDefeat();
+  }
+}
+
 function update(dt) {
   state.time += dt;
   const now = performance.now();
@@ -2069,6 +2969,62 @@ function update(dt) {
 
     moveAndCollide(dt, now);
     checkCollect();
+
+    // 靠近木门交互：拿到钥匙开门，未拿晃动提示
+    if (state.door) {
+      if (state.door.shakeT > 0) state.door.shakeT = Math.max(0, state.door.shakeT - dt);
+      if (state.door.open && state.door.openT > 0) {
+        state.door.openT = Math.max(0, state.door.openT - dt);
+      }
+      if (!state.door.open) {
+        const dDoor = Math.hypot(b.x - (state.door.c + 0.5), b.y - (state.door.r + 0.5));
+        if (dDoor < 0.98) {
+          if (state.key && state.key.collected) {
+            state.door.open = true;
+            state.door.openT = 0.6;
+            Sound.doorUnlock();
+            const { cell, ox, oy } = state.layout;
+            addDoorOpenBurst(ox + (state.door.c + 0.5) * cell, oy + (state.door.r + 0.5) * cell, cell);
+            updateKeyHud();
+          } else {
+            state.door.shakeT = 0.15;
+            state.doorPrompt = { text: '先找金钥匙 🗝️', until: now + 1200 };
+          }
+        }
+      }
+    }
+
+    // 碰撞怪兽弹开（防挫败机制）
+    if (state.monsters && state.monsters.length) {
+      for (const m of state.monsters) {
+        if (!m.alive) {
+          if (m.hitT > 0) m.hitT = Math.max(0, m.hitT - dt);
+          continue;
+        }
+        const dx = b.x - m.x;
+        const dy = b.y - m.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 0.62) {
+          const pushX = (dx / (d || 1)) * 3.2;
+          const pushY = (dy / (d || 1)) * 3.2;
+          b.vx = pushX;
+          b.vy = pushY;
+          b.bumpT = 0.24;
+          Sound.monsterBump();
+          break;
+        }
+      }
+    }
+
+    // 剑攻击冷却与计时
+    if (state.sword.attackT > 0) {
+      state.sword.attackT = Math.max(0, state.sword.attackT - dt);
+      if (state.sword.attackT === 0) state.sword.attacking = false;
+    }
+    if (state.sword.cooldown > 0) {
+      state.sword.cooldown = Math.max(0, state.sword.cooldown - dt);
+    }
+
     checkWin();
     updateProgress(dt, now);
 
@@ -2136,7 +3092,7 @@ function drawTouchFeedback(now) {
     }
   }
 
-  // 小巧柔和的浮动虚拟摇杆
+  // 浮动虚拟摇杆（红钮灰座，与参考图一致）
   const p = state.pointer;
   if (state.phase === 'play' && p.down && p.mode === 'joystick') {
     const baseX = p.sx;
@@ -2146,26 +3102,51 @@ function drawTouchFeedback(now) {
     const dx = knobX - baseX;
     const dy = knobY - baseY;
     const d = Math.hypot(dx, dy);
-    const maxR = 28;
+    const maxR = 30;
     const kx = d > maxR ? baseX + dx / d * maxR : knobX;
     const ky = d > maxR ? baseY + dy / d * maxR : knobY;
 
     g.save();
-    g.fillStyle = 'rgba(255,253,243,.36)';
-    g.strokeStyle = 'rgba(90,140,65,.28)';
-    g.lineWidth = 1.6;
+    // 灰金属底座
+    const baseGrad = g.createRadialGradient(baseX, baseY, maxR * 0.2, baseX, baseY, maxR);
+    baseGrad.addColorStop(0, '#e5dcd0');
+    baseGrad.addColorStop(0.85, '#cfc3b2');
+    baseGrad.addColorStop(1, '#9b8d7c');
+    g.fillStyle = baseGrad;
+    g.strokeStyle = '#6e5f4f';
+    g.lineWidth = 2.4;
     g.beginPath();
     g.arc(baseX, baseY, maxR, 0, TAU);
     g.fill();
     g.stroke();
 
-    g.fillStyle = 'rgba(105,198,85,.78)';
-    g.strokeStyle = 'rgba(255,255,255,.9)';
+    // 内部浅色导向凹槽
+    g.strokeStyle = 'rgba(120,105,90,.32)';
+    g.lineWidth = 1.6;
+    g.beginPath();
+    g.arc(baseX, baseY, maxR * 0.65, 0, TAU);
+    g.stroke();
+
+    // 珊瑚红球形手柄
+    const knobR = 14;
+    const knobGrad = g.createRadialGradient(kx - knobR * 0.35, ky - knobR * 0.35, knobR * 0.15, kx, ky, knobR);
+    knobGrad.addColorStop(0, '#ff7c6b');
+    knobGrad.addColorStop(0.7, '#e64f3d');
+    knobGrad.addColorStop(1, '#a62516');
+    g.fillStyle = knobGrad;
+    g.strokeStyle = '#6e1208';
     g.lineWidth = 2;
     g.beginPath();
-    g.arc(kx, ky, 11, 0, TAU);
+    g.arc(kx, ky, knobR, 0, TAU);
     g.fill();
     g.stroke();
+
+    // 摇杆高光点
+    g.fillStyle = 'rgba(255,255,255,.75)';
+    g.beginPath();
+    g.arc(kx - knobR * 0.35, ky - knobR * 0.35, knobR * 0.28, 0, TAU);
+    g.fill();
+
     g.restore();
   }
 }
@@ -2178,7 +3159,7 @@ function render(t) {
     const w = (state.cols + PAD * 2) * cell;
     const h = (state.rows + PAD * 2) * cell;
     ctx.save();
-    ctx.shadowColor = 'rgba(45,80,35,.22)';
+    ctx.shadowColor = state.level >= 21 ? 'rgba(15,10,20,.45)' : 'rgba(45,80,35,.22)';
     ctx.shadowBlur = Math.min(36, cell * 0.55);
     ctx.shadowOffsetY = Math.min(14, cell * 0.22);
     ctx.drawImage(mazeCache, ox - PAD * cell, oy - PAD * cell, w, h);
@@ -2191,23 +3172,62 @@ function render(t) {
       drawCollectStar(ox + (s.c + 0.5) * cell, oy + (s.r + 0.5) * cell, cell, t, s.phase + i);
     }
 
-    // 大萝卜
+    // 木门（密室与冒险关卡）
+    if (state.door) {
+      drawDoorArt(ctx, ox + (state.door.c + 0.5) * cell, oy + (state.door.r + 0.5) * cell, cell * 1.05, t, state.door);
+    }
+
+    // 金钥匙
+    if (state.key && !state.key.collected) {
+      drawKeyArt(ctx, ox + (state.key.c + 0.5) * cell, oy + (state.key.r + 0.5) * cell, cell * 0.95, t);
+    }
+
+    // 呆萌小怪兽
+    if (state.monsters && state.monsters.length) {
+      for (const m of state.monsters) {
+        drawMonsterArt(ctx, ox + m.x * cell, oy + m.y * cell, cell * 0.95, t, m);
+      }
+    }
+
+    // 大萝卜（终点）
     drawCarrotArt(ctx, ox + (state.goal.c + 0.5) * cell, oy + (state.goal.r + 0.5) * cell, cell * 1.08, t);
 
     // 指路虚线
     drawHint(t);
 
-    // 小兔
+    // 主角绘制（选项A：前10关小白兔，11~20关探险兔，21关以上红脸剑盾小勇士）
     const b = state.bunny;
     const moving = state.phase === 'play' && Math.hypot(b.vx, b.vy) > 0.2;
     const blink = (state.time % 4.4) < 0.12;
-    drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.1, t, {
-      face: b.face,
-      moving,
-      blink,
-      happy: state.phase === 'win',
-      bump: b.bumpT,
-    });
+
+    if (state.level >= 21) {
+      drawWarriorArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.15, t, {
+        face: b.face,
+        moving,
+        blink,
+        happy: state.phase === 'win',
+        bump: b.bumpT,
+        attacking: state.sword.attackT > 0,
+        attackProgress: 1 - (state.sword.attackT / 0.28),
+      });
+    } else if (state.level >= 11) {
+      drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.1, t, {
+        face: b.face,
+        moving,
+        blink,
+        happy: state.phase === 'win',
+        bump: b.bumpT,
+        explorer: true,
+      });
+    } else {
+      drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.1, t, {
+        face: b.face,
+        moving,
+        blink,
+        happy: state.phase === 'win',
+        bump: b.bumpT,
+      });
+    }
   }
 
   drawTouchFeedback(performance.now());
@@ -2324,6 +3344,11 @@ canvas.addEventListener('pointercancel', endPointer);
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 
 window.addEventListener('keydown', e => {
+  if (state.phase === 'play' && (e.code === 'Space' || e.key === ' ' || e.key === 'j' || e.key === 'J')) {
+    e.preventDefault();
+    heroAttack();
+    return;
+  }
   const map = {
     arrowleft: 'left', arrowright: 'right', arrowup: 'up', arrowdown: 'down',
     a: 'left', d: 'right', w: 'up', s: 'down',
@@ -2397,8 +3422,36 @@ function updateToolBtns() {
   }
 }
 
+function chapterInfo(n) {
+  if (n <= 10) return { title: '小试身手', badge: '🥕' };
+  if (n <= 20) return { title: '密室寻匙', badge: '🗝️' };
+  return { title: '勇士大冒险', badge: '⚔️' };
+}
+
+function updateKeyHud() {
+  const pill = $('keyPill');
+  const label = $('keyLabel');
+  if (!pill) return;
+  if (state.level <= 10 || !state.door) {
+    pill.classList.add('hidden');
+    return;
+  }
+  pill.classList.remove('hidden');
+  if (state.door.open) {
+    pill.className = 'pill key-pill door-opened';
+    label.textContent = '大门已开 🚪';
+  } else if (state.key && state.key.collected) {
+    pill.className = 'pill key-pill has-key';
+    label.textContent = '已拿钥匙 🗝️';
+  } else {
+    pill.className = 'pill key-pill';
+    label.textContent = '寻找钥匙';
+  }
+}
+
 function rebuildHud() {
-  $('levelPill').textContent = '第 ' + state.level + ' 关';
+  const chap = chapterInfo(state.level);
+  $('levelPill').innerHTML = '<span class="chap-badge">' + chap.badge + '</span>第 ' + state.level + ' 关 · ' + chap.title;
   const wrap = $('starIcons');
   wrap.innerHTML = '';
   for (const s of state.stars) {
@@ -2406,6 +3459,15 @@ function rebuildHud() {
     el.className = 'star-icon' + (s.collected ? ' on' : '');
     el.textContent = '★';
     wrap.appendChild(el);
+  }
+  updateKeyHud();
+  const btnAttack = $('btnAttack');
+  if (btnAttack) {
+    if (state.level >= 21) {
+      btnAttack.classList.remove('hidden');
+    } else {
+      btnAttack.classList.add('hidden');
+    }
   }
 }
 
@@ -2529,8 +3591,9 @@ function renderHome() {
     card.type = 'button';
     card.className = 'level-card' + (cleared ? ' cleared' : '') + (i === cur ? ' next' : '');
     card.setAttribute('aria-label', '第 ' + i + ' 关');
+    const chap = chapterInfo(i);
     card.innerHTML =
-      '<span class="level-num">' + i + '</span>' +
+      '<span class="level-num"><span class="level-badge">' + chap.badge + '</span>' + i + '</span>' +
       '<span class="level-stars">' + starIconsHTML(stars, levelStarCount(i)) + '</span>' +
       (cleared ? '<span class="level-check">✓</span>' : '');
     card.addEventListener('click', () => {
@@ -2777,6 +3840,17 @@ $('btnNext').addEventListener('click', () => {
 $('btnWinHome').addEventListener('click', goHome);
 $('btnHome').addEventListener('click', goHome);
 
+const btnAttack = $('btnAttack');
+if (btnAttack) {
+  const onAttack = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    heroAttack();
+  };
+  btnAttack.addEventListener('pointerdown', onAttack);
+  btnAttack.addEventListener('click', onAttack);
+}
+
 $('btnMoreLevels').addEventListener('click', () => {
   Sound.ensure();
   Sound.click();
@@ -2978,6 +4052,7 @@ renderHome();
 window.__migong = {
   state,
   startLevel,
+  heroAttack,
   win: doWin,
   toggleRotate,
   setBunny(c, r) {
