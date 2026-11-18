@@ -166,14 +166,6 @@
     touch-action:pan-y;
     transition:transform .1s;
   }
-  .more-levels-btn{
-    display:block; width:100%; max-width:330px; margin:6px auto 0; padding:6px 12px;
-    border:1.5px dashed rgba(130,160,95,.45); border-radius:12px;
-    background:rgba(255,255,255,.65); color:#6d8c4d;
-    font-family:inherit; font-size:12px; font-weight:700; cursor:pointer;
-    touch-action:pan-y;
-  }
-  .more-levels-btn:active{ background:#eef8e2; }
   .level-card:active{ transform:translateY(2px); box-shadow:0 1px 0 #e6c66a; }
   .level-card.cleared{ background:linear-gradient(180deg,#e6f8d8,#cbeeaf); box-shadow:0 3px 0 #9ccb7e; color:#3f6b2a; }
   .level-card.next{ outline:3px solid #ffc93c; outline-offset:2px; }
@@ -192,8 +184,26 @@
   .level-card .star-icon.on{ color:#e8a300; text-shadow:none; }
   .level-check{ position:absolute; top:4px; right:6px; font-size:11px; font-weight:800; color:#4d9440; }
 
-  /* ---------- 4×6 可滚动贴纸收集册 ---------- */
+  /* ---------- 贴纸分类与收集册 ---------- */
   .sticker-section{ margin-top:10px; }
+  .sticker-tabs{
+    display:flex; gap:8px; margin:4px 0 8px; justify-content:center;
+  }
+  .sticker-tab{
+    font-family:inherit; font-size:12px; font-weight:800; border:none; border-radius:999px;
+    padding:5px 13px; background:#f5eed8; color:#856e3b; cursor:pointer;
+    box-shadow:0 2px 0 #ded0aa; transition:all .15s ease;
+  }
+  .sticker-tab:active{ transform:translateY(1px); }
+  .sticker-tab.active{
+    background:#ffd74a; color:#704400; box-shadow:0 3px 0 #e4b520;
+    transform:translateY(-1px);
+  }
+  .sticker-source-pill{
+    display:inline-block; font-size:12px; font-weight:700; color:#7a5814;
+    background:#fffae5; border:1px solid #ffd86b; border-radius:999px;
+    padding:3px 12px; margin:2px auto 8px;
+  }
   .sticker-scroll{
     max-width:340px; margin:0 auto; padding:4px 5px 6px;
     max-height:158px;
@@ -435,6 +445,17 @@
   #stage.compact-h .sword-btn{ width:64px; height:64px; border-radius:20px; }
   #stage.compact-h .sword-svg{ width:32px; height:32px; }
 
+  .explore-toast{
+    position:absolute; top:70px; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,.96); color:#7a4b00;
+    border:2px solid #ffd55c; border-radius:999px;
+    padding:6px 18px; font-size:14px; font-weight:800;
+    box-shadow:0 8px 24px rgba(180,120,20,.24);
+    z-index:20; pointer-events:none;
+    animation:pop .35s cubic-bezier(.2,1.6,.4,1) both;
+  }
+  .explore-toast.hidden{ display:none !important; }
+
   @media (prefers-reduced-motion: reduce){
     .card, .win-emoji, .new-stickers, .new-sticker-card, .level-card.next::after,
     .new-sticker-orb::before, .sticker-badge.just-unlocked, .key-pill.has-key{ animation:none; }
@@ -473,6 +494,8 @@
   </div>
 </div>
 
+<div class="explore-toast hidden" id="exploreToast"></div>
+
 <div id="home" class="overlay home-overlay">
   <div class="card home-card">
     <div class="home-top-bar">
@@ -495,18 +518,21 @@
       <div class="home-section">
         <div class="section-title">
           <span>选一关 <span class="section-hint" id="levelScrollHint"></span></span>
-          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/71</span></span>
+          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/88</span></span>
         </div>
         <div class="level-scroll" id="levelScroll">
           <div class="level-grid" id="levelGrid"></div>
         </div>
-        <button class="more-levels-btn" id="btnMoreLevels" type="button">+ 更多关卡</button>
       </div>
 
       <div class="home-section sticker-section">
         <div class="section-title">
-          <span>我的贴纸册 <span class="section-hint">· 可滑动</span></span>
-          <span class="section-hint" id="stickerHint">用星星解锁</span>
+          <span>我的贴纸册</span>
+          <span class="section-hint" id="stickerHint">已收集 0/24 张</span>
+        </div>
+        <div class="sticker-tabs" id="stickerTabs">
+          <button class="sticker-tab active" id="tabStickerStar" type="button">⭐ 星星勋章 (<span id="starStickerCount">0/12</span>)</button>
+          <button class="sticker-tab" id="tabStickerExplore" type="button">🎁 迷宫宝藏 (<span id="exploreStickerCount">0/12</span>)</button>
         </div>
         <div class="sticker-scroll" id="stickerScroll">
           <div class="sticker-row" id="stickerRow"></div>
@@ -540,7 +566,8 @@
 <div id="stickerModal" class="overlay hidden">
   <div class="card sticker-modal-card">
     <h2 id="modalStickerName">蝴蝶贴纸</h2>
-    <p class="sub" id="modalStickerDesc">集齐 2 颗星星收获的宝贝！</p>
+    <div class="sticker-source-pill" id="modalStickerSource">⭐ 累计获得 2 颗星解锁</div>
+    <p class="sub" id="modalStickerDesc">拍着漂亮翅膀在花丛里跳舞的小蝴蝶</p>
     <div class="sticker-stage" id="stickerStage" title="点击放大仔细看">
       <div class="modal-sticker-orb" id="modalStickerOrb"><span id="modalStickerIcon">🦋</span></div>
     </div>
@@ -754,46 +781,47 @@ const Sound = (() => {
    进度存档与贴纸奖励
    ========================================================= */
 const SAVE_KEY = 'migong.save.v1';
-const DEFAULT_LEVEL_CARDS = 8;
-let extraLevelCards = 0;
-const STICKERS = [
-  // 花园小伙伴
-  { need: 2,  emoji: '🦋', name: '蝴蝶',   desc: '拍着漂亮翅膀在花丛里跳舞的小蝴蝶' },
-  { need: 5,  emoji: '🌷', name: '小花',   desc: '晒着温暖太阳慢慢张开笑脸的小郁金香' },
-  { need: 8,  emoji: '🐞', name: '瓢虫',   desc: '背上有可爱圆点点的红衣小瓢虫' },
-  { need: 11, emoji: '🐝', name: '小蜜蜂', desc: '嗡嗡嗡采花蜜的勤劳小蜜蜂' },
-  { need: 14, emoji: '🐌', name: '小蜗牛', desc: '背着小房子慢悠悠散步的小蜗牛' },
-  { need: 17, emoji: '🍄', name: '蘑菇',   desc: '下完小雨从草地里冒出来的红伞蘑菇' },
-  // 可爱小动物
-  { need: 20, emoji: '🐥', name: '小鸡',   desc: '毛茸茸黄澄澄，叽叽叫着找妈妈的小鸡' },
-  { need: 23, emoji: '🐱', name: '小猫',   desc: '喜欢蹭蹭小兔胡须的乖巧小猫咪' },
-  { need: 26, emoji: '🐶', name: '小狗',   desc: '摇着小尾巴陪你一起玩耍的小狗狗' },
-  { need: 29, emoji: '🐼', name: '熊猫',   desc: '抱着竹子打滚的圆滚滚国宝大熊猫' },
-  { need: 32, emoji: '🦊', name: '小狐狸', desc: '有着蓬松大尾巴的聪明小红狐狸' },
-  { need: 35, emoji: '🦁', name: '小狮子', desc: '戴着金色毛围脖的勇敢小狮子' },
-  // 美味小点心
-  { need: 38, emoji: '🍓', name: '草莓',   desc: '红彤彤酸酸甜甜的大草莓' },
-  { need: 41, emoji: '🍉', name: '西瓜',   desc: '咬一口清凉又多汁的夏日大西瓜' },
-  { need: 44, emoji: '🍦', name: '冰淇淋', desc: '奶香浓郁的甜筒小冰淇淋' },
-  { need: 47, emoji: '🍩', name: '甜甜圈', desc: '撒满彩色糖粒的软乎乎甜甜圈' },
-  { need: 50, emoji: '🍰', name: '蛋糕',   desc: '顶着红草莓的奶油小蛋糕' },
-  { need: 53, emoji: '🍪', name: '小饼干', desc: '刚烤出炉香喷喷的巧克力小饼干' },
-  // 奇幻大冒险
-  { need: 56, emoji: '🌈', name: '彩虹',   desc: '架在蓝天上的七色大滑梯彩虹' },
-  { need: 59, emoji: '🚀', name: '小火箭', desc: '咻地一下飞向闪亮星星的小火箭' },
-  { need: 62, emoji: '🛸', name: '飞碟',   desc: '载着外星小客人来花园做客的飞碟' },
-  { need: 65, emoji: '🦄', name: '独角兽', desc: '额头有闪亮小角的神奇独角兽' },
-  { need: 68, emoji: '💎', name: '宝石',   desc: '在阳光下亮晶晶的蓝色魔法宝石' },
-  { need: 71, emoji: '👑', name: '皇冠',   desc: '送给迷宫小冠军的闪耀金皇冠！' },
+const TOTAL_LEVELS = 30;
+
+const STAR_STICKERS = [
+  { id: 'star_1',  need: 2,  emoji: '🦋', name: '小蝴蝶', category: 'star', desc: '集齐 2 颗星星收获的可爱小蝴蝶！', source: '⭐ 累计获得 2 颗星星' },
+  { id: 'star_2',  need: 6,  emoji: '🌸', name: '粉樱花', category: 'star', desc: '迷宫春日里迎风盛开的粉樱花！', source: '⭐ 累计获得 6 颗星星' },
+  { id: 'star_3',  need: 12, emoji: '🍓', name: '甜草莓', category: 'star', desc: '红彤彤酸酸甜甜的美味草莓！', source: '⭐ 累计获得 12 颗星星' },
+  { id: 'star_4',  need: 18, emoji: '🍀', name: '幸运草', category: 'star', desc: '带来满满幸运的四叶小草！', source: '⭐ 累计获得 18 颗星星' },
+  { id: 'star_5',  need: 25, emoji: '🍄', name: '红蘑菇', category: 'star', desc: '小雨后从草地上冒出的红伞蘑菇！', source: '⭐ 累计获得 25 颗星星' },
+  { id: 'star_6',  need: 34, emoji: '🎈', name: '彩气球', category: 'star', desc: '在迷宫蓝天中自由飘扬的彩色气球！', source: '⭐ 累计获得 34 颗星星' },
+  { id: 'star_7',  need: 44, emoji: '🌈', name: '七彩虹', category: 'star', desc: '雨后挂在迷宫天边的梦幻彩虹！', source: '⭐ 累计获得 44 颗星星' },
+  { id: 'star_8',  need: 54, emoji: '🧁', name: '纸杯蛋糕', category: 'star', desc: '香香甜甜、奶油蓬松的杯子蛋糕！', source: '⭐ 累计获得 54 颗星星' },
+  { id: 'star_9',  need: 64, emoji: '🍭', name: '棒棒糖', category: 'star', desc: '色彩斑斓、甜进心坎的波浪棒棒糖！', source: '⭐ 累计获得 64 颗星星' },
+  { id: 'star_10', need: 74, emoji: '🌙', name: '弯弯月', category: 'star', desc: '宁静夜空里温柔发光的弯月亮！', source: '⭐ 累计获得 74 颗星星' },
+  { id: 'star_11', need: 82, emoji: '🚀', name: '小火箭', category: 'star', desc: '咻的一声冲破云霄的迷宫小火箭！', source: '⭐ 累计获得 82 颗星星' },
+  { id: 'star_12', need: 88, emoji: '👑', name: '金皇冠', category: 'star', desc: '送给集满几乎所有星星的迷宫小冠军！', source: '⭐ 累计获得 88 颗星星' },
 ];
-const MAX_STARS = STICKERS[STICKERS.length - 1].need;
+
+const EXPLORE_STICKERS = [
+  { id: 'exp_1',  level: 2,  emoji: '🍯', name: '蜂蜜罐', category: 'explore', desc: '在第 2 关迷宫角落神秘宝箱中发现的香纯野蜂蜜！', source: '🎁 在第 2 关迷宫宝箱中发现' },
+  { id: 'exp_2',  level: 4,  emoji: '🌻', name: '向日葵', category: 'explore', desc: '在第 4 关迷宫支路发现的追随阳光的金色大向日葵！', source: '🎁 在第 4 关迷宫宝箱中发现' },
+  { id: 'exp_3',  level: 7,  emoji: '💎', name: '蓝宝石', category: 'explore', desc: '在第 7 关偏僻深处挖出的璀璨魔法蓝宝石！', source: '🎁 在第 7 关迷宫宝箱中发现' },
+  { id: 'exp_4',  level: 9,  emoji: '🧭', name: '探险罗盘', category: 'explore', desc: '在第 9 关密道盲端中拾取的金色方向罗盘！', source: '🎁 在第 9 关迷宫宝箱中发现' },
+  { id: 'exp_5',  level: 12, emoji: '🗝️', name: '古铜秘钥', category: 'explore', desc: '在第 12 关密室角落找到的刻有神秘铭文的古老钥匙！', source: '🎁 在第 12 关迷宫宝箱中发现' },
+  { id: 'exp_6',  level: 14, emoji: '📜', name: '藏宝图', category: 'explore', desc: '在第 14 关宝箱中发现的羊皮纸迷宫藏宝图！', source: '🎁 在第 14 关迷宫宝箱中发现' },
+  { id: 'exp_7',  level: 17, emoji: '🏮', name: '魔法提灯', category: 'explore', desc: '在第 17 关迷宫中发现的驱散黑暗的暖光提灯！', source: '🎁 在第 17 关迷宫宝箱中发现' },
+  { id: 'exp_8',  level: 19, emoji: '🔮', name: '占卜水晶', category: 'explore', desc: '在第 19 关密室尽头发现的能看穿宝藏的纯净水晶球！', source: '🎁 在第 19 关迷宫宝箱中发现' },
+  { id: 'exp_9',  level: 22, emoji: '🛡️', name: '勇气圆盾', category: 'explore', desc: '在第 22 关怪兽迷宫中找到的守护小兔的纯银圆盾！', source: '🎁 在第 22 关迷宫宝箱中发现' },
+  { id: 'exp_10', level: 24, emoji: '⚔️', name: '圣光之剑', category: 'explore', desc: '在第 24 关怪兽洞穴中拔出的闪烁蓝白光芒的传说小剑！', source: '🎁 在第 24 关迷宫宝箱中发现' },
+  { id: 'exp_11', level: 27, emoji: '🏅', name: '勇士勋章', category: 'explore', desc: '在第 27 关深处发现的颁发给无畏小兔的最高勇士勋章！', source: '🎁 在第 27 关迷宫宝箱中发现' },
+  { id: 'exp_12', level: 30, emoji: '🏆', name: '终极金杯', category: 'explore', desc: '在第 30 关迷宫终极宝箱中获得的至高无上胜利金杯！', source: '🎁 在第 30 关迷宫宝箱中发现' },
+];
+
+const ALL_STICKERS = [...STAR_STICKERS, ...EXPLORE_STICKERS];
+const MAX_STARS = 88;
 
 function levelStarCount(n) {
   return n === 1 ? 2 : 3;
 }
 
 function loadSave() {
-  const out = { best: {}, starBank: 0, current: 1 };
+  const out = { best: {}, starBank: 0, current: 1, foundStickers: [] };
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (raw) {
@@ -802,7 +830,7 @@ function loadSave() {
         if (data.best && typeof data.best === 'object') {
           for (const key of Object.keys(data.best)) {
             const idx = Number(key);
-            if (!Number.isInteger(idx) || idx < 1 || idx > 9999) continue;
+            if (!Number.isInteger(idx) || idx < 1 || idx > TOTAL_LEVELS) continue;
             const v = Number(data.best[key]);
             if (Number.isFinite(v)) out.best[idx] = clamp(Math.round(v), 0, levelStarCount(idx));
           }
@@ -810,7 +838,10 @@ function loadSave() {
         const bank = Number(data.starBank);
         if (Number.isFinite(bank)) out.starBank = clamp(Math.round(bank), 0, 9999);
         const cur = Number(data.current);
-        if (Number.isFinite(cur)) out.current = clamp(Math.round(cur), 1, 9999);
+        if (Number.isFinite(cur)) out.current = clamp(Math.round(cur), 1, TOTAL_LEVELS);
+        if (Array.isArray(data.foundStickers)) {
+          out.foundStickers = data.foundStickers.filter(id => typeof id === 'string' && EXPLORE_STICKERS.some(s => s.id === id));
+        }
       }
     }
   } catch (e) { /* 隐私模式下忽略 */ }
@@ -845,9 +876,11 @@ const state = {
   collected: 0,
   key: null,
   door: null,
+  gift: null,
   monsters: [],
   sword: { attacking: false, attackT: 0, cooldown: 0 },
   doorPrompt: { text: '', until: 0 },
+  stickerTab: 'star',              // star | explore
   bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0 },
   pointer: {
     down: false, x: 0, y: 0, id: null,
@@ -920,12 +953,17 @@ const LEVEL_CONF = {
   18: { rooms: [7, 5], braid: 0.12, loops: 0 },
   19: { rooms: [7, 5], braid: 0.12, loops: 0 },
   20: { rooms: [7, 5], braid: 0.10, loops: 0 },
-  // 21+关：勇士大冒险（呆萌小怪兽与宝剑攻击战斗）
+  // 21~30关：勇士大冒险（呆萌小怪兽与宝剑攻击战斗）
   21: { rooms: [6, 5], braid: 0.15, loops: 0 },
   22: { rooms: [6, 5], braid: 0.15, loops: 0 },
   23: { rooms: [7, 5], braid: 0.12, loops: 0 },
   24: { rooms: [7, 5], braid: 0.12, loops: 0 },
   25: { rooms: [7, 6], braid: 0.10, loops: 0 },
+  26: { rooms: [7, 6], braid: 0.10, loops: 0 },
+  27: { rooms: [7, 6], braid: 0.10, loops: 0 },
+  28: { rooms: [8, 6], braid: 0.08, loops: 0 },
+  29: { rooms: [8, 6], braid: 0.08, loops: 0 },
+  30: { rooms: [8, 6], braid: 0.08, loops: 0 },
 };
 
 function generateMaze(roomsW, roomsH, braidChance, loopCount, rand) {
@@ -1040,31 +1078,122 @@ function bfsDist(grid, cols, rows, sc, sr) {
 }
 
 function pickStars(grid, cols, rows, start, goal, count, rand) {
-  const dist = bfsDist(grid, cols, rows, start.c, start.r);
+  // 严格排他规则：绝不生成在门、钥匙、怪兽、宝箱或终点邻近格
+  const isForbidden = (c, r) => {
+    if (c <= 0 || c >= cols - 1 || r <= 0 || r >= rows - 1) return true;
+    if (grid[r][c] !== 0) return true;
+    // 起点与终点
+    if (c === start.c && r === start.r) return true;
+    if (c === goal.c && r === goal.r) return true;
+    if (Math.abs(c - start.c) + Math.abs(r - start.r) < 2) return true;
+    // 关键！离终点萝卜太近（曼哈顿距离 < 2）绝对不放，避免开门后小兔碰终点提前结算
+    if (Math.abs(c - goal.c) + Math.abs(r - goal.r) < 2) return true;
+    // 关键！大门所在格绝对不放（门未开时是阻挡墙，且容易造成收集死角）
+    if (state.door && c === state.door.c && r === state.door.r) return true;
+    // 大门紧邻格也尽量避免
+    if (state.door && Math.abs(c - state.door.c) + Math.abs(r - state.door.r) < 1) return true;
+    // 钥匙所在格不放
+    if (state.key && c === state.key.c && r === state.key.r) return true;
+    // 神秘宝箱所在格不放
+    if (state.gift && c === state.gift.c && r === state.gift.r) return true;
+    // 怪兽初始格不放
+    if (state.monsters && state.monsters.some(m => m.c === c && m.r === r)) return true;
+    return false;
+  };
+
+  // 门如果是关着的，把门当成障碍计算门前可达区
+  const doorBlockedGrid = grid.map((row, r) =>
+    row.map((cell, c) => (state.door && c === state.door.c && r === state.door.r ? 1 : cell))
+  );
+  const preDoorDist = bfsDist(doorBlockedGrid, cols, rows, start.c, start.r);
+
+  const preDoorCands = [];
+  const otherCands = [];
+
+  for (let r = 1; r < rows - 1; r++) {
+    for (let c = 1; c < cols - 1; c++) {
+      if (isForbidden(c, r)) continue;
+      if (preDoorDist[r * cols + c] !== -1 && preDoorDist[r * cols + c] >= 2) {
+        preDoorCands.push({ c, r, dist: preDoorDist[r * cols + c] });
+      } else {
+        otherCands.push({ c, r });
+      }
+    }
+  }
+
+  shuffle(preDoorCands, rand);
+  shuffle(otherCands, rand);
+
+  const chosen = [];
+  // 门前优先放置（确保在寻匙开门途中就能吃满或至少吃到大半）
+  const neededPre = state.door ? Math.min(preDoorCands.length, Math.max(1, count - 1)) : count;
+
+  for (const cell of preDoorCands) {
+    if (chosen.every(s => Math.abs(s.c - cell.c) + Math.abs(s.r - cell.r) >= 2)) {
+      chosen.push(cell);
+      if (chosen.length >= neededPre) break;
+    }
+  }
+
+  // 补充剩余星星（门前或门后开阔支路）
+  const remaining = [...preDoorCands, ...otherCands].filter(c => !chosen.some(s => s.c === c.c && s.r === c.r));
+  for (const cell of remaining) {
+    if (chosen.length >= count) break;
+    if (chosen.every(s => Math.abs(s.c - cell.c) + Math.abs(s.r - cell.r) >= 2)) {
+      chosen.push(cell);
+    }
+  }
+  // 宽松保底（保证数量）
+  for (const cell of remaining) {
+    if (chosen.length >= count) break;
+    if (!chosen.some(s => s.c === cell.c && s.r === cell.r)) {
+      chosen.push(cell);
+    }
+  }
+
+  return chosen;
+}
+
+function setupGiftBox(grid, cols, rows, start, goal, rand, level) {
+  state.gift = null;
+  const sticker = EXPLORE_STICKERS.find(s => s.level === level);
+  if (!sticker) return;
+
+  const opened = Array.isArray(save.foundStickers) && save.foundStickers.includes(sticker.id);
+
+  // 挑选一个偏僻的死胡同/分支尽头放置神秘宝箱
   const cands = [];
   for (let r = 1; r < rows - 1; r++) {
     for (let c = 1; c < cols - 1; c++) {
       if (grid[r][c] !== 0) continue;
-      if ((c === start.c && r === start.r) || (c === goal.c && r === goal.r)) continue;
-      if (dist[r * cols + c] < 3) continue;
+      if (c === start.c && r === start.r) continue;
+      if (c === goal.c && r === goal.r) continue;
+      if (Math.abs(c - start.c) + Math.abs(r - start.r) < 3) continue;
       if (Math.abs(c - goal.c) + Math.abs(r - goal.r) < 2) continue;
-      cands.push({ c, r });
+      if (state.door && c === state.door.c && r === state.door.r) continue;
+      if (state.key && c === state.key.c && r === state.key.r) continue;
+      if (state.monsters && state.monsters.some(m => m.c === c && m.r === r)) continue;
+
+      let openWays = 0;
+      for (const [dc, dr] of DIRS4) {
+        if (grid[r + dr][c + dc] === 0) openWays++;
+      }
+      cands.push({ c, r, deadEnd: openWays === 1 ? 10 : 0 });
     }
   }
-  shuffle(cands, rand);
-  const chosen = [];
-  for (const cell of cands) {
-    if (chosen.every(s => Math.abs(s.c - cell.c) + Math.abs(s.r - cell.r) >= 3)) {
-      chosen.push(cell);
-    }
-    if (chosen.length === count) return chosen;
+
+  if (cands.length) {
+    cands.sort((a, b) => (b.deadEnd + rand() * 4) - (a.deadEnd + rand() * 4));
+    const chosen = cands[0];
+    state.gift = {
+      c: chosen.c,
+      r: chosen.r,
+      opened,
+      sticker,
+      bounceT: 0,
+      sparklePhase: rand() * TAU,
+    };
   }
-  // 退路：允许星星靠得近一点
-  for (const cell of cands) {
-    if (!chosen.some(s => s.c === cell.c && s.r === cell.r)) chosen.push(cell);
-    if (chosen.length === count) break;
-  }
-  return chosen;
 }
 
 function setupKeyAndDoor(grid, cols, rows, start, goal, rand) {
@@ -1226,6 +1355,7 @@ function startLevel(n) {
   // 机制扩展：11~20关开启密室寻匙；21+关开启勇士大冒险
   state.key = null;
   state.door = null;
+  state.gift = null;
   state.monsters = [];
   state.sword = { attacking: false, attackT: 0, cooldown: 0 };
   state.doorPrompt = { text: '', until: 0 };
@@ -1236,6 +1366,7 @@ function startLevel(n) {
   if (n >= 21) {
     setupMonsters(grid, cols, rows, start, goal, rand);
   }
+  setupGiftBox(grid, cols, rows, start, goal, rand, n);
 
   const starCount = n === 1 ? 2 : 3;
   state.stars = pickStars(grid, cols, rows, start, goal, starCount, rand)
@@ -1260,7 +1391,7 @@ function startLevel(n) {
   state.phase = 'play';
 
   if (n > save.current) {
-    save.current = n;
+    save.current = Math.min(TOTAL_LEVELS, n);
     persistSave();
   }
 
@@ -1310,6 +1441,7 @@ function transposeMaze() {
   for (const s of state.stars) swapPair(s);
   if (state.key) swapPair(state.key);
   if (state.door) swapPair(state.door);
+  if (state.gift) swapPair(state.gift);
   if (state.monsters) {
     for (const m of state.monsters) {
       swapPair(m);
@@ -1771,7 +1903,7 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
   g.fill();
   g.stroke();
 
-  // 探险装备（11~20关密室寻匙模式，选项A小兔进阶）
+  // 探险装备（11~20关密室寻匙模式，小探险兔）
   if (opts.explorer) {
     g.fillStyle = '#b27236';
     g.strokeStyle = '#633711';
@@ -1799,151 +1931,177 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
     g.restore();
   }
 
+  // 英勇小骑士装备（21~30关勇士大冒险，小白兔戴金盔露耳朵、手握宝剑与圆盾）
+  if (opts.knight) {
+    // 1. 金色骑士小圆盾（佩在小兔身后/左爪）
+    g.save();
+    g.translate(-s * 0.16, s * 0.09);
+    g.fillStyle = '#fabc37';
+    g.strokeStyle = '#996307';
+    g.lineWidth = Math.max(1.4, s * 0.022);
+    g.beginPath();
+    g.arc(0, 0, s * 0.135, 0, TAU);
+    g.fill(); g.stroke();
+    // 盾面金色星星
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(0, 0, s * 0.05, 0, TAU);
+    g.fill();
+    g.restore();
+
+    // 2. 金色骑士头盔（精巧贴合小兔头顶，露出一对俏皮长白兔耳）
+    g.save();
+    g.translate(s * 0.06, -s * 0.28);
+    const helmGrad = g.createLinearGradient(0, -s * 0.12, 0, s * 0.06);
+    helmGrad.addColorStop(0, '#ffe57f');
+    helmGrad.addColorStop(0.5, '#fabc37');
+    helmGrad.addColorStop(1, '#c98a12');
+    g.fillStyle = helmGrad;
+    g.strokeStyle = '#7c4d00';
+    g.lineWidth = Math.max(1.4, s * 0.022);
+    g.beginPath();
+    g.arc(0, 0, s * 0.19, Math.PI, 0, false);
+    g.lineTo(s * 0.18, s * 0.06);
+    g.lineTo(-s * 0.18, s * 0.06);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    // 额前红宝石勋章
+    g.fillStyle = '#e8392a';
+    g.beginPath();
+    g.arc(0, -s * 0.02, s * 0.035, 0, TAU);
+    g.fill();
+    // 头盔顶部小羽缨
+    g.fillStyle = '#ff4d40';
+    g.beginPath();
+    g.ellipse(0, -s * 0.21, s * 0.032, s * 0.075, 0.1, 0, TAU);
+    g.fill();
+    g.restore();
+
+    // 3. 右手握银蓝小宝剑（挥剑攻击动画）
+    g.save();
+    g.translate(s * 0.18, s * 0.08);
+    let swordAngle = -Math.PI * 0.15;
+    if (opts.attacking) {
+      swordAngle = -Math.PI * 0.15 + Math.sin((opts.attackProgress || 0) * Math.PI) * Math.PI * 0.75;
+    }
+    g.rotate(swordAngle);
+    const bL = s * 0.36;
+    const bW = s * 0.09;
+    const bladeGrad = g.createLinearGradient(0, -bL, bW, 0);
+    bladeGrad.addColorStop(0, '#ffffff');
+    bladeGrad.addColorStop(0.5, '#76c8f4');
+    bladeGrad.addColorStop(1, '#3b92ca');
+    g.fillStyle = bladeGrad;
+    g.strokeStyle = '#1b5a82';
+    g.lineWidth = Math.max(1.2, s * 0.018);
+    g.beginPath();
+    g.moveTo(-bW / 2, 0);
+    g.lineTo(-bW / 2, -bL * 0.78);
+    g.lineTo(0, -bL);
+    g.lineTo(bW / 2, -bL * 0.78);
+    g.lineTo(bW / 2, 0);
+    g.closePath();
+    g.fill(); g.stroke();
+    // 剑格与剑柄
+    g.fillStyle = '#fabc37';
+    g.fillRect(-bW * 0.85, 0, bW * 1.7, s * 0.035);
+    g.fillStyle = '#b8771c';
+    g.fillRect(-bW * 0.25, s * 0.035, bW * 0.5, s * 0.08);
+    g.fillStyle = '#fabc37';
+    g.beginPath();
+    g.arc(0, s * 0.13, s * 0.03, 0, TAU);
+    g.fill();
+    g.restore();
+
+    // 4. 挥剑光弧
+    if (opts.attacking) {
+      drawSwordSlashArc(g, s * 0.22, 0, s, opts.attackProgress || 0);
+    }
+  }
+
   g.restore();
 }
 
-/* =========================================================
-   21+关红脸剑盾小勇士（高度还原参考截图）
-   ========================================================= */
-function drawWarriorArt(g, x, y, s, t, opts = {}) {
-  const face = opts.face || 1;
-  const moving = !!opts.moving;
-  const bump = opts.bump || 0;
-  const attacking = !!opts.attacking;
-  const attackProgress = opts.attackProgress || 0;
-
-  const bob = moving ? Math.abs(Math.sin(t * 11)) * s * 0.06 : Math.sin(t * 2.2) * s * 0.02;
-  const squash = bump > 0 ? Math.sin((bump / 0.18) * Math.PI) * 0.08 : 0;
-
+function drawGiftBoxArt(g, x, y, s, t, gift) {
   g.save();
-  g.translate(x, y + s * 0.02);
+  const opened = !!gift.opened;
+  const bob = opened ? 0 : Math.sin(t * 3.6 + (gift.sparklePhase || 0)) * s * 0.05;
+  g.translate(x, y + bob);
 
-  // 地面椭圆软投影
-  g.fillStyle = 'rgba(40, 20, 25, 0.28)';
+  // 阴影
+  g.fillStyle = 'rgba(40, 25, 10, 0.22)';
   g.beginPath();
-  g.ellipse(0, s * 0.36, s * 0.28, s * 0.08, 0, 0, TAU);
+  g.ellipse(0, s * 0.32 - bob * 0.5, s * 0.28, s * 0.09, 0, 0, TAU);
   g.fill();
 
-  g.translate(0, -bob);
-  g.scale(face, 1 + squash);
+  const w = s * 0.68;
+  const h = s * 0.52;
+  const rad = s * 0.10;
 
-  // 1. 小黄靴（两只脚步行动画）
-  const stepL = moving ? Math.sin(t * 11) * s * 0.06 : 0;
-  const stepR = moving ? -Math.sin(t * 11) * s * 0.06 : 0;
-  g.fillStyle = '#fabc37';
-  g.strokeStyle = '#9c6508';
-  g.lineWidth = Math.max(1.2, s * 0.02);
-  roundRectPath(g, -s * 0.22, s * 0.24 + stepL, s * 0.16, s * 0.12, s * 0.05);
+  // 木质箱体
+  const boxGrad = g.createLinearGradient(0, -h / 2, 0, h / 2);
+  boxGrad.addColorStop(0, '#c9823e');
+  boxGrad.addColorStop(0.6, '#a86326');
+  boxGrad.addColorStop(1, '#854714');
+  g.fillStyle = boxGrad;
+  g.strokeStyle = '#5a2e0a';
+  g.lineWidth = Math.max(1.4, s * 0.024);
+  roundRectPath(g, -w / 2, -h / 2, w, h, rad);
   g.fill(); g.stroke();
-  roundRectPath(g, s * 0.06, s * 0.24 + stepR, s * 0.16, s * 0.12, s * 0.05);
-  g.fill(); g.stroke();
 
-  // 2. 红色方圆脸萌身体（截图主体）
-  const bodyW = s * 0.54;
-  const bodyH = s * 0.52;
-  const bodyGrad = g.createLinearGradient(0, -bodyH / 2, 0, bodyH / 2);
-  bodyGrad.addColorStop(0, '#f25942');
-  bodyGrad.addColorStop(1, '#db3824');
-  g.fillStyle = bodyGrad;
-  g.strokeStyle = '#85190b';
-  g.lineWidth = Math.max(1.6, s * 0.026);
-  roundRectPath(g, -bodyW / 2, -bodyH / 2, bodyW, bodyH, s * 0.18);
-  g.fill();
-  g.stroke();
+  // 金色金属包角
+  g.fillStyle = '#f8ca3f';
+  g.strokeStyle = '#996307';
+  g.lineWidth = Math.max(1.1, s * 0.016);
+  for (const sx of [-1, 1]) {
+    for (const sy of [-1, 1]) {
+      g.beginPath();
+      g.arc(sx * (w / 2 - rad * 0.7), sy * (h / 2 - rad * 0.7), rad * 0.75, 0, TAU);
+      g.fill(); g.stroke();
+    }
+  }
 
-  // 3. 坚毅呆萌的大眼睛与黑色粗眉毛（完全对齐截图）
-  const eyeR = s * 0.082;
-  for (const dir of [-1, 1]) {
-    const ex = dir * s * 0.14;
-    const ey = -s * 0.05;
+  // 十字朱红缎带
+  g.fillStyle = '#e8392a';
+  g.fillRect(-s * 0.06, -h / 2, s * 0.12, h);
 
-    // 眼白
-    g.fillStyle = '#ffffff';
+  if (!opened) {
+    // 缎带蝴蝶结与金色箱锁
+    g.fillStyle = '#ff5747';
     g.beginPath();
-    g.arc(ex, ey, eyeR, 0, TAU);
+    g.ellipse(-s * 0.08, -h / 2 - s * 0.03, s * 0.08, s * 0.045, -0.4, 0, TAU);
+    g.fill();
+    g.beginPath();
+    g.ellipse(s * 0.08, -h / 2 - s * 0.03, s * 0.08, s * 0.045, 0.4, 0, TAU);
     g.fill();
 
-    // 瞳孔
-    g.fillStyle = '#1e1411';
+    g.fillStyle = '#ffd74a';
+    g.strokeStyle = '#8a5806';
+    g.lineWidth = Math.max(1.2, s * 0.018);
     g.beginPath();
-    g.arc(ex + dir * 1.5, ey, eyeR * 0.58, 0, TAU);
-    g.fill();
+    g.arc(0, 0, s * 0.06, 0, TAU);
+    g.fill(); g.stroke();
 
-    // 瞳孔双高光
-    g.fillStyle = '#ffffff';
-    g.beginPath();
-    g.arc(ex + dir * 1.5 - 1.5, ey - 2, eyeR * 0.24, 0, TAU);
+    // 未开启时悬浮微光金星
+    if (((t * 3) | 0) % 2 === 0) {
+      g.fillStyle = '#fff4a3';
+      g.beginPath();
+      g.arc(0, -h * 0.85, s * 0.05, 0, TAU);
+      g.fill();
+    }
+  } else {
+    // 已开启状态：箱盖翻开露出金色内衬
+    g.fillStyle = '#ffd54f';
+    roundRectPath(g, -w * 0.38, -h * 0.35, w * 0.76, h * 0.4, s * 0.05);
     g.fill();
-
-    // 坚毅的黑色粗眉毛
-    g.strokeStyle = '#1e1411';
-    g.lineWidth = Math.max(2.4, s * 0.04);
-    g.lineCap = 'round';
-    g.beginPath();
-    g.moveTo(ex - dir * eyeR * 0.8, ey - eyeR * 1.1 + (dir > 0 ? 0 : 2));
-    g.lineTo(ex + dir * eyeR * 1.0, ey - eyeR * 1.3 - (dir > 0 ? 3 : 0));
+    g.strokeStyle = '#c99616';
     g.stroke();
-  }
-
-  // 4. 左手圆形盾牌（参考截图）
-  g.save();
-  g.translate(-bodyW * 0.52, s * 0.06);
-  g.fillStyle = '#df9b4f';
-  g.strokeStyle = '#8a4b12';
-  g.lineWidth = Math.max(1.5, s * 0.024);
-  g.beginPath();
-  g.arc(0, 0, s * 0.15, 0, TAU);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#fabc37';
-  g.beginPath();
-  g.arc(0, 0, s * 0.05, 0, TAU);
-  g.fill();
-  g.restore();
-
-  // 5. 右手高举宝剑（参考截图高举向上，挥动时劈砍）
-  g.save();
-  g.translate(bodyW * 0.44, -s * 0.02);
-  let swordAngle = -Math.PI * 0.15;
-  if (attacking) {
-    swordAngle = -Math.PI * 0.15 + Math.sin(attackProgress * Math.PI) * Math.PI * 0.75;
-  }
-  g.rotate(swordAngle);
-
-  // 银蓝利刃
-  const bladeL = s * 0.44;
-  const bladeW = s * 0.11;
-  const bladeGrad = g.createLinearGradient(0, -bladeL, bladeW, 0);
-  bladeGrad.addColorStop(0, '#ffffff');
-  bladeGrad.addColorStop(0.4, '#76c4f0');
-  bladeGrad.addColorStop(1, '#4293ca');
-  g.fillStyle = bladeGrad;
-  g.strokeStyle = '#205c86';
-  g.lineWidth = Math.max(1.2, s * 0.02);
-  g.beginPath();
-  g.moveTo(-bladeW / 2, 0);
-  g.lineTo(-bladeW / 2, -bladeL * 0.8);
-  g.lineTo(0, -bladeL);
-  g.lineTo(bladeW / 2, -bladeL * 0.8);
-  g.lineTo(bladeW / 2, 0);
-  g.closePath();
-  g.fill();
-  g.stroke();
-
-  // 金色剑格与剑柄
-  g.fillStyle = '#fabc37';
-  g.fillRect(-bladeW * 0.9, 0, bladeW * 1.8, s * 0.04);
-  g.fillStyle = '#d28f3a';
-  g.fillRect(-bladeW * 0.3, s * 0.04, bladeW * 0.6, s * 0.10);
-  g.fillStyle = '#fabc37';
-  g.beginPath();
-  g.arc(0, s * 0.16, s * 0.035, 0, TAU);
-  g.fill();
-  g.restore();
-
-  // 6. 挥剑光效（圆弧剑气）
-  if (attacking) {
-    drawSwordSlashArc(g, bodyW * 0.4, -s * 0.05, s, attackProgress);
+    g.fillStyle = '#7a5405';
+    g.font = `bold ${Math.max(10, s * 0.22)}px sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('✨', 0, -h * 0.12);
   }
 
   g.restore();
@@ -2283,6 +2441,43 @@ function addDoorOpenBurst(x, y, cell) {
       t: 0,
     });
   }
+}
+
+function addGiftBurst(x, y, cell) {
+  const g = 170;
+  const colors = ['#ffd65c', '#ff5983', '#5cd6ff', '#ffffff', '#76e054'];
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * TAU + Math.random() * 0.25;
+    const spd = 70 + Math.random() * 140;
+    state.particles.push({
+      x, y,
+      vx: Math.cos(a) * spd,
+      vy: Math.sin(a) * spd - 35,
+      g,
+      drag: 1.4,
+      size: Math.max(3, cell * (0.05 + Math.random() * 0.05)),
+      w: Math.max(4, cell * 0.08),
+      h: Math.max(4, cell * 0.08),
+      color: colors[i % colors.length],
+      kind: i % 2 === 0 ? 'star' : 'confetti',
+      rot: Math.random() * TAU,
+      vr: (Math.random() - 0.5) * 8,
+      life: 0.65 + Math.random() * 0.35,
+      t: 0,
+    });
+  }
+}
+
+let exploreToastTimer = null;
+function showExploreToast(msg) {
+  const el = $('exploreToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  clearTimeout(exploreToastTimer);
+  exploreToastTimer = setTimeout(() => {
+    el.classList.add('hidden');
+  }, 2600);
 }
 
 function drawCarrotArt(g, x, y, s, t) {
@@ -2848,6 +3043,25 @@ function checkCollect() {
       state.progressTimer = 0;
     }
   }
+
+  // 开启神秘探索宝箱
+  if (state.gift && !state.gift.opened) {
+    const gdx = b.x - (state.gift.c + 0.5);
+    const gdy = b.y - (state.gift.r + 0.5);
+    if (gdx * gdx + gdy * gdy < 0.32) {
+      state.gift.opened = true;
+      if (!save.foundStickers.includes(state.gift.sticker.id)) {
+        save.foundStickers.push(state.gift.sticker.id);
+        persistSave();
+        state.newStickers.push(state.gift.sticker);
+      }
+      Sound.keyPickup();
+      addGiftBurst(ox + (state.gift.c + 0.5) * cell, oy + (state.gift.r + 0.5) * cell, cell);
+      showExploreToast('🎁 获得探索贴纸「' + state.gift.sticker.name + '」！');
+      state.lastProgress = { x: b.x, y: b.y };
+      state.progressTimer = 0;
+    }
+  }
 }
 
 function doWin() {
@@ -2866,12 +3080,17 @@ function doWin() {
     save.best[state.level] = state.collected;
   }
   save.starBank = Math.min(9999, (save.starBank || 0) + state.collected);
-  save.current = Math.min(9999, Math.max(save.current, state.level + 1));
+  save.current = Math.min(TOTAL_LEVELS, Math.max(save.current, state.level + 1));
   persistSave();
   const afterAlbum = albumStars();
-  state.newStickers = STICKERS.filter(s => s.need > prevAlbum && s.need <= afterAlbum);
+  const newStarStickers = STAR_STICKERS.filter(s => s.need > prevAlbum && s.need <= afterAlbum);
+  for (const st of newStarStickers) {
+    if (!state.newStickers.some(s => s.id === st.id)) {
+      state.newStickers.push(st);
+    }
+  }
   if (state.newStickers.length) {
-    state.justUnlocked = state.newStickers.map(s => s.need);
+    state.justUnlocked = state.newStickers.map(s => s.id);
   }
   renderHome();
 
@@ -3182,6 +3401,11 @@ function render(t) {
       drawKeyArt(ctx, ox + (state.key.c + 0.5) * cell, oy + (state.key.r + 0.5) * cell, cell * 0.95, t);
     }
 
+    // 神秘探索宝箱
+    if (state.gift) {
+      drawGiftBoxArt(ctx, ox + (state.gift.c + 0.5) * cell, oy + (state.gift.r + 0.5) * cell, cell * 0.95, t, state.gift);
+    }
+
     // 呆萌小怪兽
     if (state.monsters && state.monsters.length) {
       for (const m of state.monsters) {
@@ -3195,39 +3419,28 @@ function render(t) {
     // 指路虚线
     drawHint(t);
 
-    // 主角绘制（选项A：前10关小白兔，11~20关探险兔，21关以上红脸剑盾小勇士）
+    // 主角绘制（1~10关小白兔，11~20关探险兔，21~30关英勇小骑士兔，永远是小白兔！）
     const b = state.bunny;
     const moving = state.phase === 'play' && Math.hypot(b.vx, b.vy) > 0.2;
     const blink = (state.time % 4.4) < 0.12;
 
+    const bunnyOpts = {
+      face: b.face,
+      moving,
+      blink,
+      happy: state.phase === 'win',
+      bump: b.bumpT,
+    };
+
     if (state.level >= 21) {
-      drawWarriorArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.15, t, {
-        face: b.face,
-        moving,
-        blink,
-        happy: state.phase === 'win',
-        bump: b.bumpT,
-        attacking: state.sword.attackT > 0,
-        attackProgress: 1 - (state.sword.attackT / 0.28),
-      });
+      bunnyOpts.knight = true;
+      bunnyOpts.attacking = state.sword.attackT > 0;
+      bunnyOpts.attackProgress = 1 - (state.sword.attackT / 0.28);
     } else if (state.level >= 11) {
-      drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.1, t, {
-        face: b.face,
-        moving,
-        blink,
-        happy: state.phase === 'win',
-        bump: b.bumpT,
-        explorer: true,
-      });
-    } else {
-      drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.1, t, {
-        face: b.face,
-        moving,
-        blink,
-        happy: state.phase === 'win',
-        bump: b.bumpT,
-      });
+      bunnyOpts.explorer = true;
     }
+
+    drawBunnyArt(ctx, ox + b.x * cell, oy + b.y * cell, cell * 1.12, t, bunnyOpts);
   }
 
   drawTouchFeedback(performance.now());
@@ -3510,8 +3723,9 @@ function renderStickerModalView() {
   const stageEl = $('stickerStage');
 
   $('modalStickerIcon').textContent = st.emoji;
-  $('modalStickerName').textContent = st.name + '贴纸';
-  $('modalStickerDesc').textContent = st.desc + '（' + st.need + '★ 解锁）';
+  $('modalStickerName').textContent = (st.category === 'star' ? '【⭐星星勋章】' : '【🎁迷宫宝藏】') + st.name + '贴纸';
+  $('modalStickerSource').textContent = st.source;
+  $('modalStickerDesc').textContent = st.desc;
 
   orb.style.width = Math.round(baseOrb * zoom) + 'px';
   orb.style.height = Math.round(baseOrb * zoom) + 'px';
@@ -3534,10 +3748,13 @@ function renderStickerModalView() {
 }
 
 function openStickerModal(st) {
+  const isStar = st.category === 'star';
   const total = albumStars();
-  const list = STICKERS.filter(s => total >= s.need);
+  const list = isStar
+    ? STAR_STICKERS.filter(s => total >= s.need)
+    : EXPLORE_STICKERS.filter(s => Array.isArray(save.foundStickers) && save.foundStickers.includes(s.id));
   if (!list.length) return;
-  const idx = Math.max(0, list.findIndex(s => s.need === st.need));
+  const idx = Math.max(0, list.findIndex(s => s.id === st.id));
   modalStickerState.unlockedList = list;
   modalStickerState.index = idx;
   modalStickerState.zoomIdx = 0;
@@ -3575,16 +3792,14 @@ function renderHome() {
   const total = albumStars();
   $('totalStars').textContent = total;
   $('totalMaxStars').textContent = '/' + MAX_STARS;
-  const cur = clamp(save.current || 1, 1, 9999);
+  const cur = clamp(save.current || 1, 1, TOTAL_LEVELS);
   $('startHint').textContent = cur > 1 ? '继续第 ' + cur + ' 关' : '从第 1 关开始';
-
-  const cardCount = homeCardCount(cur);
-  $('levelScrollHint').textContent = cardCount > DEFAULT_LEVEL_CARDS ? '· 可上下滑动' : '';
+  $('levelScrollHint').textContent = '· 全30关冒险';
 
   const grid = $('levelGrid');
   grid.innerHTML = '';
   let nextCardEl = null;
-  for (let i = 1; i <= cardCount; i++) {
+  for (let i = 1; i <= TOTAL_LEVELS; i++) {
     const cleared = save.best[i] !== undefined;
     const stars = save.best[i] || 0;
     const card = document.createElement('button');
@@ -3606,32 +3821,50 @@ function renderHome() {
     grid.appendChild(card);
   }
 
-  $('btnMoreLevels').textContent = '+ 再显示 8 关（当前共 ' + cardCount + ' 关）';
-  if (nextCardEl && cur > DEFAULT_LEVEL_CARDS) {
+  if (nextCardEl && cur > 8) {
     requestAnimationFrame(() => nextCardEl.scrollIntoView({ block: 'nearest' }));
   }
 
-  const unlockedCount = STICKERS.filter(s => total >= s.need).length;
+  // 贴纸分类与统计
+  const unlockedStarCount = STAR_STICKERS.filter(s => total >= s.need).length;
+  const unlockedExploreCount = EXPLORE_STICKERS.filter(s => Array.isArray(save.foundStickers) && save.foundStickers.includes(s.id)).length;
+  $('starStickerCount').textContent = unlockedStarCount + '/12';
+  $('exploreStickerCount').textContent = unlockedExploreCount + '/12';
+
+  const tabStar = $('tabStickerStar');
+  const tabExplore = $('tabStickerExplore');
+  if (tabStar && tabExplore) {
+    tabStar.classList.toggle('active', state.stickerTab === 'star');
+    tabExplore.classList.toggle('active', state.stickerTab === 'explore');
+  }
+
+  const isStarTab = state.stickerTab === 'star';
+  const displayList = isStarTab ? STAR_STICKERS : EXPLORE_STICKERS;
+
   const row = $('stickerRow');
   row.innerHTML = '';
   let justEl = null;
-  for (const st of STICKERS) {
-    const unlocked = total >= st.need;
-    const just = state.justUnlocked.includes(st.need);
+
+  for (const st of displayList) {
+    const unlocked = isStarTab
+      ? total >= st.need
+      : Array.isArray(save.foundStickers) && save.foundStickers.includes(st.id);
+    const just = state.justUnlocked.includes(st.id);
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'sticker-badge ' + (unlocked ? 'unlocked' : 'locked') + (just ? ' just-unlocked' : '');
-    el.setAttribute('aria-label', unlocked ? st.name + '贴纸' : '集齐 ' + st.need + ' 颗星解锁');
+    el.setAttribute('aria-label', unlocked ? st.name + '贴纸' : (isStarTab ? '集齐 ' + st.need + ' 颗星解锁' : '第 ' + st.level + ' 关宝箱解锁'));
     el.innerHTML =
       (!unlocked ? '<span class="sticker-lock">🔒</span>' : '') +
       '<span class="sticker-cutout"><span class="sticker-emoji">' + st.emoji + '</span></span>' +
       (unlocked
         ? '<span class="sticker-name">' + st.name + '</span>'
-        : '<span class="sticker-need">' + st.need + '★</span>');
+        : '<span class="sticker-need">' + (isStarTab ? st.need + '★' : '第' + st.level + '关') + '</span>');
+
     el.addEventListener('click', () => {
       Sound.ensure();
       if (unlocked) {
-        state.justUnlocked = state.justUnlocked.filter(n => n !== st.need);
+        state.justUnlocked = state.justUnlocked.filter(id => id !== st.id);
         el.classList.remove('just-unlocked');
         openStickerModal(st);
       } else {
@@ -3639,27 +3872,36 @@ function renderHome() {
         el.classList.remove('shake');
         void el.offsetWidth;
         el.classList.add('shake');
-        const needMore = st.need - total;
         const hint = $('stickerHint');
-        hint.textContent = '还差 ' + needMore + ' 颗★解锁哦';
+        if (isStarTab) {
+          const needMore = st.need - total;
+          hint.textContent = '还差 ' + needMore + ' 颗★解锁哦';
+        } else {
+          hint.textContent = '在第 ' + st.level + ' 关神秘宝箱里哦';
+        }
         clearTimeout(stickerHintTimer);
         stickerHintTimer = setTimeout(() => {
-          const all = albumStars() >= MAX_STARS;
-          hint.textContent = all ? STICKERS.length + '/' + STICKERS.length + ' 全部集齐！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
+          const sum = unlockedStarCount + unlockedExploreCount;
+          hint.textContent = sum >= ALL_STICKERS.length
+            ? '24/24 全部集齐啦！👑'
+            : '已收集 ' + sum + '/24 张';
         }, 2000);
       }
     });
     if (just && !justEl) justEl = el;
     row.appendChild(el);
   }
+
   if (justEl) {
     requestAnimationFrame(() => justEl.scrollIntoView({ block: 'nearest' }));
   }
 
-  const all = total >= MAX_STARS;
+  const allCollected = (unlockedStarCount + unlockedExploreCount) >= ALL_STICKERS.length;
   const hint = $('stickerHint');
-  hint.textContent = all ? STICKERS.length + '/' + STICKERS.length + ' 全部集齐！' : '已集 ' + unlockedCount + '/' + STICKERS.length + ' 张';
-  hint.classList.toggle('all', all);
+  hint.textContent = allCollected
+    ? '24/24 全部集齐啦！👑'
+    : '已收集 ' + (unlockedStarCount + unlockedExploreCount) + '/24 张';
+  hint.classList.toggle('all', allCollected);
 }
 
 function goHome() {
@@ -3679,12 +3921,14 @@ function goHome() {
   state.rows = 0;
   state.grid = [];
   state.stars = [];
+  state.gift = null;
   state.collected = 0;
   $('hud').classList.add('hidden');
   $('win').classList.add('hidden');
   $('newStickers').classList.add('hidden');
   $('stickerModal').classList.add('hidden');
   $('fsModal').classList.add('hidden');
+  $('exploreToast').classList.add('hidden');
   $('home').classList.remove('hidden');
   renderHome();
 }
@@ -3700,21 +3944,21 @@ function showWinOverlay() {
   }
 
   const total = albumStars();
-  if (total >= MAX_STARS) {
-    $('winMsg').textContent = '哇！贴纸全部集齐啦！';
+  if (total >= MAX_STARS && Array.isArray(save.foundStickers) && save.foundStickers.length >= EXPLORE_STICKERS.length) {
+    $('winMsg').textContent = '哇！全部贴纸大满贯啦！👑';
   } else if (state.collected === state.stars.length) {
     $('winMsg').textContent = '哇！星星全找到啦！';
   } else {
     $('winMsg').textContent = '找到大萝卜啦！';
   }
 
-  // 攒星解锁下一张贴纸进度条
-  const nextSt = STICKERS.find(s => total < s.need);
+  // 攒星解锁下一张星星贴纸进度条
+  const nextSt = STAR_STICKERS.find(s => total < s.need);
   const prevTotal = clamp(state.prevAlbumStars || 0, 0, MAX_STARS);
   const fill = $('winProgFill');
   if (nextSt) {
-    const prevIdx = STICKERS.indexOf(nextSt) - 1;
-    const baseNeed = prevIdx >= 0 ? STICKERS[prevIdx].need : 0;
+    const prevIdx = STAR_STICKERS.indexOf(nextSt) - 1;
+    const baseNeed = prevIdx >= 0 ? STAR_STICKERS[prevIdx].need : 0;
     const span = nextSt.need - baseNeed;
     const fromPct = clamp(((prevTotal - baseNeed) / span) * 100, 0, 100);
     const toPct = clamp(((total - baseNeed) / span) * 100, 0, 100);
@@ -3730,7 +3974,7 @@ function showWinOverlay() {
       });
     });
   } else {
-    $('winProgText').textContent = '贴纸册全部集满啦！';
+    $('winProgText').textContent = '⭐ 星星贴纸全部集满啦！';
     $('winProgTarget').textContent = MAX_STARS + '/' + MAX_STARS + '★ 👑';
     fill.style.transition = 'none';
     fill.style.width = '100%';
@@ -3829,12 +4073,16 @@ $('btnStart').addEventListener('click', () => {
   Sound.ensure();
   Sound.click();
   Sound.startMusic();
-  startLevel(clamp(save.current || 1, 1, 9999));
+  startLevel(clamp(save.current || 1, 1, TOTAL_LEVELS));
 });
 
 $('btnNext').addEventListener('click', () => {
   Sound.click();
-  startLevel(state.level + 1);
+  if (state.level < TOTAL_LEVELS) {
+    startLevel(state.level + 1);
+  } else {
+    goHome();
+  }
 });
 
 $('btnWinHome').addEventListener('click', goHome);
@@ -3851,16 +4099,24 @@ if (btnAttack) {
   btnAttack.addEventListener('click', onAttack);
 }
 
-$('btnMoreLevels').addEventListener('click', () => {
-  Sound.ensure();
-  Sound.click();
-  extraLevelCards += 8;
-  renderHome();
-  const scrollEl = $('levelScroll');
-  requestAnimationFrame(() => {
-    scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
+const tabStar = $('tabStickerStar');
+const tabExplore = $('tabStickerExplore');
+if (tabStar) {
+  tabStar.addEventListener('click', () => {
+    Sound.ensure();
+    Sound.click();
+    state.stickerTab = 'star';
+    renderHome();
   });
-});
+}
+if (tabExplore) {
+  tabExplore.addEventListener('click', () => {
+    Sound.ensure();
+    Sound.click();
+    state.stickerTab = 'explore';
+    renderHome();
+  });
+}
 
 $('btnSound').addEventListener('click', toggleSound);
 $('btnHomeSound').addEventListener('click', toggleSound);
