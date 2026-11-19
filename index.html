@@ -33,6 +33,7 @@
   }
   #game:active{ cursor:grabbing; }
   button{ touch-action:manipulation; }
+  .hidden{ display:none !important; }
 
   /* ---------- 顶部 HUD 与主页内部工具栏 ---------- */
   #hud{
@@ -42,9 +43,24 @@
     pointer-events:none;
   }
   #hud.hidden{ display:none; }
-  .hud-left, .hud-right{ display:flex; align-items:center; gap:7px; }
-  .hud-left{ pointer-events:none; }
-  .hud-right{ pointer-events:auto; position:relative; z-index:11; }
+  .hud-center{ display:flex; align-items:center; gap:6px; pointer-events:none; }
+  .hud-center .pill{ pointer-events:auto; }
+  .hud-right{ display:flex; align-items:center; gap:7px; pointer-events:auto; position:relative; z-index:11; }
+  .back-btn{
+    pointer-events:auto; position:relative; z-index:11;
+    width:42px; height:42px; border-radius:50%; border:none; padding:0;
+    background:#ffffff; color:#d93829;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 3px 0 rgba(180,60,40,.2), 0 8px 18px rgba(0,0,0,.08);
+    cursor:pointer; transition:transform .1s, box-shadow .1s;
+    touch-action:manipulation;
+  }
+  .back-btn:active{ transform:scale(0.92); box-shadow:0 1px 0 rgba(180,60,40,.2); }
+  .back-arrow{
+    font-size:32px; font-weight:900; line-height:1; display:inline-block;
+    transform:translate(-1px, -2px); user-select:none;
+  }
+  .hud-left{ display:flex; align-items:center; gap:7px; pointer-events:none; }
   .home-top-bar{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
     margin-bottom:6px;
@@ -59,11 +75,12 @@
   .home-tools .icon-btn{ width:36px; height:36px; }
   .pill{
     background:rgba(255,255,255,.88); border-radius:999px;
-    padding:6px 13px; font-weight:700; color:var(--ink); font-size:15px; line-height:1;
+    padding:6px 11px; font-weight:700; color:var(--ink); font-size:13.5px; line-height:1;
+    white-space:nowrap;
     box-shadow:0 3px 0 rgba(80,110,60,.16), 0 8px 20px rgba(60,90,40,.10);
-    display:flex; align-items:center; gap:6px;
+    display:flex; align-items:center; gap:5px;
   }
-  .star-pill{ padding:6px 11px 4px; }
+  .star-pill{ padding:6px 9px 4px; }
   .star-icons{ display:flex; gap:2px; font-size:19px; line-height:1; }
   .star-icon{ display:inline-block; color:#cfd8c6; transition:color .18s, transform .18s; }
   .star-icon.on{ color:var(--gold); text-shadow:0 0 8px rgba(255,200,60,.55); }
@@ -417,33 +434,91 @@
   .chap-badge{ font-size:15px; margin-right:3px; }
   .level-badge{ font-size:11px; margin-right:2px; vertical-align:1px; }
 
-  /* ---------- 黄金宝剑攻击大按钮（对齐参考截图） ---------- */
-  .sword-btn{
-    position:absolute;
-    right:max(22px, calc(16px + env(safe-area-inset-right)));
-    bottom:max(20px, calc(16px + env(safe-area-inset-bottom)));
-    width:76px; height:76px; border-radius:24px;
-    border:3px solid #ffea8f;
-    background:linear-gradient(180deg, #f8c948 0%, #efa21f 100%);
-    box-shadow:0 6px 0 #be7812, 0 14px 28px rgba(170, 95, 10, .35);
+  /* ---------- 底部独立掌机控制台（对齐参考截图上下分离结构） ---------- */
+  .gamepad-bar{
+    position:absolute; bottom:0; left:0; right:0; z-index:12;
+    height:max(138px, calc(116px + env(safe-area-inset-bottom)));
+    padding:0 max(24px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-right));
+    background:linear-gradient(180deg, #d8c5b0 0%, #c4af98 100%);
+    box-shadow:0 -4px 14px rgba(70,50,30,.12), inset 0 2px 0 rgba(255,255,255,.45);
+    border-top:2.5px solid #b59f86;
+    display:flex; align-items:center; justify-content:space-between;
+    pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  .gamepad-bar.hidden{ display:none !important; }
+
+  @media (min-width: 768px) {
+    .gamepad-bar{
+      padding-left: max(32px, calc(50vw - 320px));
+      padding-right: max(32px, calc(50vw - 320px));
+    }
+  }
+
+  /* 左侧固定圆盘摇杆 */
+  .joypad-zone{
     display:flex; align-items:center; justify-content:center;
-    cursor:pointer; z-index:15;
-    user-select:none; -webkit-user-select:none; touch-action:manipulation;
+    width:108px; height:108px; flex-shrink:0;
+  }
+  .joypad-base{
+    position:relative; width:94px; height:94px; border-radius:50%;
+    background:radial-gradient(circle at 50% 45%, #f2ebe3 0%, #ded6c8 65%, #baad9c 100%);
+    border:2.5px solid #7c6b58;
+    box-shadow:inset 0 4px 8px rgba(0,0,0,.22), 0 4px 10px rgba(60,40,20,.18), 0 1px 0 rgba(255,255,255,.6);
+    display:flex; align-items:center; justify-content:center;
+    touch-action:none; cursor:pointer;
+  }
+  .joypad-ring{
+    position:absolute; width:64px; height:64px; border-radius:50%;
+    border:2px dashed rgba(124,107,88,.42); pointer-events:none;
+  }
+  .joypad-knob{
+    position:absolute; width:52px; height:52px; border-radius:50%;
+    background:radial-gradient(circle at 35% 32%, #ff7e6e 0%, #ee4b38 55%, #b42514 100%);
+    border:2.5px solid #6b1409;
+    box-shadow:0 4px 8px rgba(100,20,10,.35), inset 0 2px 3px rgba(255,255,255,.6);
+    pointer-events:none;
+    will-change:transform;
+    transition:transform .04s linear;
+  }
+  .joypad-knob.released{
+    transition:transform .22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .joypad-knob::after{
+    content:''; position:absolute; top:8px; left:11px; width:16px; height:10px; border-radius:50%;
+    background:rgba(255,255,255,.68); transform:rotate(-28deg); pointer-events:none;
+  }
+
+  /* 右侧攻击按键 */
+  .action-zone{
+    display:flex; align-items:center; justify-content:center;
+    width:108px; height:108px; flex-shrink:0;
+  }
+  .sword-pad-btn{
+    width:82px; height:82px; border-radius:26px; border:3px solid #ffea8f;
+    background:linear-gradient(180deg, #f8c948 0%, #efa21f 100%);
+    box-shadow:0 6px 0 #be7812, 0 12px 24px rgba(170,95,10,.3);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; touch-action:manipulation;
+    user-select:none; -webkit-user-select:none;
     transition:transform .08s ease, box-shadow .08s ease;
   }
-  .sword-btn:active{
-    transform:translateY(4px) scale(0.94);
-    box-shadow:0 2px 0 #be7812, 0 6px 14px rgba(170, 95, 10, .25);
+  .sword-pad-btn:active{
+    transform:translateY(4px) scale(0.95);
+    box-shadow:0 2px 0 #be7812, 0 6px 12px rgba(170,95,10,.25);
   }
-  .sword-btn.hidden{ display:none !important; }
-  .sword-svg{ pointer-events:none; filter:drop-shadow(0 2px 3px rgba(120,60,0,.2)); }
+  .sword-pad-btn.hidden{ display:none !important; }
+  .sword-pad-svg{ pointer-events:none; filter:drop-shadow(0 2px 3px rgba(120,60,0,.22)); }
 
-  #stage.rotated .sword-btn{
-    right:max(24px, calc(16px + env(safe-area-inset-bottom)));
-    bottom:max(18px, calc(14px + env(safe-area-inset-left)));
+  #stage.compact-h .gamepad-bar{
+    height:max(104px, calc(90px + env(safe-area-inset-bottom)));
+    padding:0 max(18px, env(safe-area-inset-left)) max(6px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-right));
   }
-  #stage.compact-h .sword-btn{ width:64px; height:64px; border-radius:20px; }
-  #stage.compact-h .sword-svg{ width:32px; height:32px; }
+  #stage.compact-h .joypad-zone, #stage.compact-h .action-zone{ width:84px; height:84px; }
+  #stage.compact-h .joypad-base{ width:76px; height:76px; }
+  #stage.compact-h .joypad-ring{ width:50px; height:50px; }
+  #stage.compact-h .joypad-knob{ width:42px; height:42px; }
+  #stage.compact-h .sword-pad-btn{ width:70px; height:70px; border-radius:22px; }
+  #stage.compact-h .sword-pad-svg{ width:40px; height:40px; }
 
   .explore-toast{
     position:absolute; top:70px; left:50%; transform:translateX(-50%);
@@ -466,31 +541,37 @@
 <div id="stage">
 <canvas id="game"></canvas>
 
-<!-- 底部右侧黄金宝剑攻击按钮（第21关勇士大冒险展示） -->
-<button class="sword-btn hidden" id="btnAttack" type="button" aria-label="挥剑攻击">
-  <svg viewBox="0 0 48 48" width="40" height="40" class="sword-svg">
-    <!-- 剑身（浅蓝与银白高光） -->
-    <path d="M35 7 L41 13 L21 33 L15 33 L13 31 L13 25 Z" fill="#68b5e8" stroke="#256f9e" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M35 7 L39 11 L21 29 L16 29 Z" fill="#ffffff" opacity="0.8"/>
-    <!-- 剑柄与护手（金木质感） -->
-    <path d="M11 29 L19 37 L16 40 L8 32 Z" fill="#d28f3a" stroke="#874e11" stroke-width="2.2" stroke-linejoin="round"/>
-    <circle cx="9" cy="39" r="4.2" fill="#ffd55c" stroke="#874e11" stroke-width="2.2"/>
-  </svg>
-</button>
-
 <div id="hud" class="hidden">
-  <div class="hud-left">
+  <button class="back-btn" id="btnHome" aria-label="返回主页" title="返回主页">
+    <span class="back-arrow">‹</span>
+  </button>
+  <div class="hud-center">
     <div class="pill" id="levelPill">第 1 关</div>
     <div class="pill star-pill" aria-label="已收集的星星"><span class="star-icons" id="starIcons"></span></div>
     <div class="pill key-pill hidden" id="keyPill" aria-label="钥匙状态"><span class="key-icon" id="keyIcon">🗝️</span><span id="keyLabel">寻找钥匙</span></div>
   </div>
   <div class="hud-right">
-    <button class="icon-btn" id="btnSound" aria-label="声音开关"></button>
-    <button class="icon-btn" id="btnRotate" aria-label="旋转屏幕" title="旋转屏幕"></button>
-    <button class="icon-btn" id="btnHome" aria-label="回到主页">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>
+    <button class="icon-btn" id="btnSound" aria-label="声音开关" title="声音开关"></button>
+  </div>
+</div>
+
+<!-- 底部独立掌机控制台（对齐参考截图） -->
+<div id="gamepadBar" class="gamepad-bar hidden">
+  <div class="joypad-zone" id="joypadZone">
+    <div class="joypad-base" id="joypadBase">
+      <div class="joypad-ring"></div>
+      <div class="joypad-knob" id="joypadKnob"></div>
+    </div>
+  </div>
+  <div class="action-zone" id="actionZone">
+    <button class="sword-pad-btn hidden" id="btnAttack" type="button" aria-label="挥剑攻击">
+      <svg viewBox="0 0 48 48" width="46" height="46" class="sword-pad-svg">
+        <path d="M35 7 L41 13 L21 33 L15 33 L13 31 L13 25 Z" fill="#68b5e8" stroke="#205c86" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M35 7 L39 11 L21 29 L16 29 Z" fill="#ffffff" opacity="0.85"/>
+        <path d="M11 29 L19 37 L16 40 L8 32 Z" fill="#d28f3a" stroke="#874e11" stroke-width="2.2" stroke-linejoin="round"/>
+        <circle cx="9" cy="39" r="4.2" fill="#ffd55c" stroke="#874e11" stroke-width="2.2"/>
+      </svg>
     </button>
-    <button class="icon-btn" id="btnFull" aria-label="全屏"></button>
   </div>
 </div>
 
@@ -501,9 +582,7 @@
     <div class="home-top-bar">
       <span class="home-tag">🥕 3岁+ 宝宝迷宫</span>
       <div class="home-tools">
-        <button class="icon-btn" id="btnHomeSound" aria-label="声音开关"></button>
-        <button class="icon-btn" id="btnHomeRotate" aria-label="旋转屏幕" title="旋转屏幕"></button>
-        <button class="icon-btn" id="btnHomeFull" aria-label="全屏" title="全屏"></button>
+        <button class="icon-btn" id="btnHomeSound" aria-label="声音开关" title="声音开关"></button>
       </div>
     </div>
     <div class="home-col-left">
@@ -889,6 +968,13 @@ const state = {
     jx: 0, jy: 0, jStrength: 0,
   },
   keys: new Set(),
+  joypad: {
+    active: false,
+    id: null,
+    dirX: 0,
+    dirY: 0,
+    strength: 0,
+  },
   tapTarget: null,
   tapPath: null,
   tapRipple: null,
@@ -1312,6 +1398,21 @@ function resetPointer() {
   state.downInfo = null;
 }
 
+function resetJoypad() {
+  if (state.joypad) {
+    state.joypad.active = false;
+    state.joypad.id = null;
+    state.joypad.dirX = 0;
+    state.joypad.dirY = 0;
+    state.joypad.strength = 0;
+  }
+  const knob = $('joypadKnob');
+  if (knob) {
+    knob.classList.add('released');
+    knob.style.transform = 'translate(0px, 0px)';
+  }
+}
+
 function startLevel(n) {
   state.level = n;
   state.seed = (Math.random() * 2147483647) | 0;
@@ -1378,6 +1479,7 @@ function startLevel(n) {
     vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0,
   };
   resetPointer();
+  resetJoypad();
   state.tapTarget = null;
   state.tapPath = null;
   state.tapRipple = null;
@@ -1398,12 +1500,14 @@ function startLevel(n) {
   clearTimeout(state.winTimer);
   state.winTimer = null;
 
-  computeLayout();
-  rebuildHud();
   $('home').classList.add('hidden');
   $('win').classList.add('hidden');
   $('newStickers').classList.add('hidden');
   $('hud').classList.remove('hidden');
+  const gp = $('gamepadBar');
+  if (gp) gp.classList.remove('hidden');
+  computeLayout();
+  rebuildHud();
 }
 
 /* =========================================================
@@ -1508,20 +1612,24 @@ function computeLayout() {
   canvas.style.height = H + 'px';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  const hudH = Math.min(60, Math.max(48, H * 0.068));
-  const sidePad = state.rotated ? 44 : 12;
+  const isPlaying = state.phase !== 'home' || ($('home') && $('home').classList.contains('hidden'));
+  const hudH = Math.min(62, Math.max(48, H * 0.07));
+  const sidePad = state.rotated ? 44 : 16;
   const availW = W - sidePad;
-  const bottomPad = state.level >= 21 ? Math.min(84, Math.max(70, H * 0.12)) : 10;
-  const availH = H - hudH - bottomPad;
+
+  // 底部手柄高度预留：若在游戏中，为底部手柄留出专属空间，确保迷宫在上半部纯净居中绝不被遮挡
+  const isCompactH = H <= 560;
+  const gamepadH = isPlaying ? (isCompactH ? 96 : Math.min(150, Math.max(130, H * 0.175))) : 10;
+  const availH = Math.max(120, H - hudH - gamepadH - 12);
   let cell = 80;
   let ox = W / 2;
   let oy = hudH + (availH - 10) / 2;
   if (state.cols && state.rows) {
     cell = Math.min(availW / (state.cols + 0.48), availH / (state.rows + 0.48));
     ox = (W - state.cols * cell) / 2;
-    oy = hudH + (availH - state.rows * cell) / 2;
+    oy = hudH + (availH - state.rows * cell) / 2 + 6;
   }
-  state.layout = { W, H, dpr, cell, ox, oy, hudH };
+  state.layout = { W, H, dpr, cell, ox, oy, hudH, gamepadH };
 
   if (state.cols && state.rows && state.grid.length) buildMazeCache();
 }
@@ -2951,25 +3059,16 @@ function moveAndCollide(dt, now) {
 
 function computeDesired() {
   const b = state.bunny;
-  const p = state.pointer;
 
-  if (p.down) {
-    if (p.mode === 'joystick') {
-      return { x: p.jx * SPEED * p.jStrength, y: p.jy * SPEED * p.jStrength };
-    }
-    if (p.mode === 'hold' && state.downInfo && performance.now() - state.downInfo.t > 140) {
-      p.mode = 'attract';
-    }
-    if (p.mode === 'attract') {
-      const dx = p.x - b.x;
-      const dy = p.y - b.y;
-      const d = Math.hypot(dx, dy);
-      if (d < 0.06) return { x: 0, y: 0 };
-      return { x: dx / d * SPEED, y: dy / d * SPEED };
-    }
-    return { x: 0, y: 0 };
+  // 1. 独立掌机摇杆控制（最高优先级）
+  if (state.joypad && state.joypad.active && state.joypad.strength > 0) {
+    return {
+      x: state.joypad.dirX * SPEED * state.joypad.strength,
+      y: state.joypad.dirY * SPEED * state.joypad.strength,
+    };
   }
 
+  // 2. 键盘控制
   let kx = 0, ky = 0;
   if (state.keys.has('left')) kx--;
   if (state.keys.has('right')) kx++;
@@ -2980,6 +3079,7 @@ function computeDesired() {
     return { x: kx / d * SPEED, y: ky / d * SPEED };
   }
 
+  // 3. 轻点寻路路径
   if (state.tapPath && state.tapPath.length) {
     while (state.tapPath.length) {
       const next = state.tapPath[0];
@@ -2997,6 +3097,7 @@ function computeDesired() {
     state.tapPath = null;
   }
 
+  // 4. 格内点击微调
   if (state.tapTarget) {
     const dx = state.tapTarget.x - b.x;
     const dy = state.tapTarget.y - b.y;
@@ -3292,7 +3393,7 @@ function drawTouchFeedback(now) {
   const { cell, ox, oy } = state.layout;
   const g = ctx;
 
-  // 轻点寻路目标水波纹
+  // 轻点寻路目标金色水波纹
   if (state.tapRipple) {
     const age = (now - state.tapRipple.t) / 480;
     if (age >= 1) {
@@ -3309,64 +3410,6 @@ function drawTouchFeedback(now) {
       g.stroke();
       g.restore();
     }
-  }
-
-  // 浮动虚拟摇杆（红钮灰座，与参考图一致）
-  const p = state.pointer;
-  if (state.phase === 'play' && p.down && p.mode === 'joystick') {
-    const baseX = p.sx;
-    const baseY = p.sy;
-    const knobX = p.cx;
-    const knobY = p.cy;
-    const dx = knobX - baseX;
-    const dy = knobY - baseY;
-    const d = Math.hypot(dx, dy);
-    const maxR = 30;
-    const kx = d > maxR ? baseX + dx / d * maxR : knobX;
-    const ky = d > maxR ? baseY + dy / d * maxR : knobY;
-
-    g.save();
-    // 灰金属底座
-    const baseGrad = g.createRadialGradient(baseX, baseY, maxR * 0.2, baseX, baseY, maxR);
-    baseGrad.addColorStop(0, '#e5dcd0');
-    baseGrad.addColorStop(0.85, '#cfc3b2');
-    baseGrad.addColorStop(1, '#9b8d7c');
-    g.fillStyle = baseGrad;
-    g.strokeStyle = '#6e5f4f';
-    g.lineWidth = 2.4;
-    g.beginPath();
-    g.arc(baseX, baseY, maxR, 0, TAU);
-    g.fill();
-    g.stroke();
-
-    // 内部浅色导向凹槽
-    g.strokeStyle = 'rgba(120,105,90,.32)';
-    g.lineWidth = 1.6;
-    g.beginPath();
-    g.arc(baseX, baseY, maxR * 0.65, 0, TAU);
-    g.stroke();
-
-    // 珊瑚红球形手柄
-    const knobR = 14;
-    const knobGrad = g.createRadialGradient(kx - knobR * 0.35, ky - knobR * 0.35, knobR * 0.15, kx, ky, knobR);
-    knobGrad.addColorStop(0, '#ff7c6b');
-    knobGrad.addColorStop(0.7, '#e64f3d');
-    knobGrad.addColorStop(1, '#a62516');
-    g.fillStyle = knobGrad;
-    g.strokeStyle = '#6e1208';
-    g.lineWidth = 2;
-    g.beginPath();
-    g.arc(kx, ky, knobR, 0, TAU);
-    g.fill();
-    g.stroke();
-
-    // 摇杆高光点
-    g.fillStyle = 'rgba(255,255,255,.75)';
-    g.beginPath();
-    g.arc(kx - knobR * 0.35, ky - knobR * 0.35, knobR * 0.28, 0, TAU);
-    g.fill();
-
-    g.restore();
   }
 }
 
@@ -3448,7 +3491,7 @@ function render(t) {
 }
 
 /* =========================================================
-   输入
+   输入与交互（迷宫轻点寻路 + 底部独立掌机控制台）
    ========================================================= */
 function updatePointerCell(pos) {
   const { cell, ox, oy } = state.layout;
@@ -3458,103 +3501,110 @@ function updatePointerCell(pos) {
   state.pointer.y = y;
 }
 
+// 迷宫点击：纯净自动寻路与微调
 canvas.addEventListener('pointerdown', e => {
-  if (state.phase !== 'play' || state.pointer.down) return;
+  if (state.phase !== 'play') return;
   Sound.ensure();
   const pos = screenToStage(e.clientX, e.clientY);
-  state.pointer.down = true;
-  state.pointer.id = e.pointerId;
-  state.pointer.sx = pos.x;
-  state.pointer.sy = pos.y;
-  state.pointer.cx = pos.x;
-  state.pointer.cy = pos.y;
-  state.pointer.mode = 'hold';
-  state.pointer.jx = 0;
-  state.pointer.jy = 0;
-  state.pointer.jStrength = 0;
   updatePointerCell(pos);
-  state.tapTarget = null;
-  state.tapPath = null;
-  state.downInfo = { t: performance.now(), x: pos.x, y: pos.y, moved: false };
-  try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-  e.preventDefault();
-}, { passive: false });
-
-canvas.addEventListener('pointermove', e => {
-  if (!state.pointer.down || e.pointerId !== state.pointer.id) return;
-  const p = state.pointer;
-  const pos = screenToStage(e.clientX, e.clientY);
-  p.cx = pos.x;
-  p.cy = pos.y;
-  updatePointerCell(pos);
-
-  const dx = pos.x - p.sx;
-  const dy = pos.y - p.sy;
-  const dist = Math.hypot(dx, dy);
-
-  if (state.downInfo && Math.hypot(pos.x - state.downInfo.x, pos.y - state.downInfo.y) > 12) {
-    state.downInfo.moved = true;
-    p.mode = 'joystick';
-  }
-
-  if (p.mode === 'joystick') {
-    const maxFollow = 34;
-    if (dist > maxFollow) {
-      p.sx = pos.x - dx / dist * maxFollow;
-      p.sy = pos.y - dy / dist * maxFollow;
-    }
-    const jdx = pos.x - p.sx;
-    const jdy = pos.y - p.sy;
-    const jd = Math.hypot(jdx, jdy);
-    if (jd > 5) {
-      p.jx = jdx / jd;
-      p.jy = jdy / jd;
-      p.jStrength = clamp((jd - 5) / 22, 0.35, 1);
-    } else {
-      p.jx = 0;
-      p.jy = 0;
-      p.jStrength = 0;
-    }
-  }
-  e.preventDefault();
-}, { passive: false });
-
-function endPointer(e) {
-  if (!state.pointer.down) return;
-  if (e.pointerId !== undefined && e.pointerId !== state.pointer.id) return;
-  const info = state.downInfo;
   const px = state.pointer.x;
   const py = state.pointer.y;
-  const quickTap = info && (performance.now() - info.t < 280) && !info.moved;
-  resetPointer();
+  const now = performance.now();
 
-  if (quickTap && state.phase === 'play') {
-    const now = performance.now();
-    const open = nearestOpenCell(px, py);
-    if (open) {
-      const curC = Math.floor(state.bunny.x);
-      const curR = Math.floor(state.bunny.y);
-      if (open.c === curC && open.r === curR) {
-        state.tapTarget = { x: clamp(px, curC + 0.28, curC + 0.72), y: clamp(py, curR + 0.28, curR + 0.72), until: now + 3500 };
-        state.tapRipple = { x: state.tapTarget.x, y: state.tapTarget.y, t: now };
-      } else {
-        const path = findPathTo(state.bunny.x, state.bunny.y, open.c, open.r);
-        if (path && path.length > 1) {
-          path.shift();
-          state.tapPath = path;
-          state.tapRipple = { x: open.c + 0.5, y: open.r + 0.5, t: now };
-        }
+  const open = nearestOpenCell(px, py);
+  if (open) {
+    const curC = Math.floor(state.bunny.x);
+    const curR = Math.floor(state.bunny.y);
+    if (open.c === curC && open.r === curR) {
+      state.tapTarget = { x: clamp(px, curC + 0.28, curC + 0.72), y: clamp(py, curR + 0.28, curR + 0.72), until: now + 3500 };
+      state.tapRipple = { x: state.tapTarget.x, y: state.tapTarget.y, t: now };
+    } else {
+      const path = findPathTo(state.bunny.x, state.bunny.y, open.c, open.r);
+      if (path && path.length > 1) {
+        path.shift();
+        state.tapPath = path;
+        state.tapRipple = { x: open.c + 0.5, y: open.r + 0.5, t: now };
       }
     }
-  } else {
-    state.tapTarget = null;
-    state.tapPath = null;
   }
-}
-canvas.addEventListener('pointerup', endPointer);
-canvas.addEventListener('pointercancel', endPointer);
+  e.preventDefault();
+}, { passive: false });
 
 canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// 底部独立掌机摇杆交互绑定
+const joypadBase = $('joypadBase');
+const joypadKnob = $('joypadKnob');
+
+function handleJoypadMove(e) {
+  if (!state.joypad || !state.joypad.active || e.pointerId !== state.joypad.id) return;
+  const rect = joypadBase.getBoundingClientRect();
+  const rawCenterX = rect.left + rect.width / 2;
+  const rawCenterY = rect.top + rect.height / 2;
+
+  let dx, dy;
+  if (state.rotated) {
+    const p = screenToStage(e.clientX, e.clientY);
+    const c = screenToStage(rawCenterX, rawCenterY);
+    dx = p.x - c.x;
+    dy = p.y - c.y;
+  } else {
+    dx = e.clientX - rawCenterX;
+    dy = e.clientY - rawCenterY;
+  }
+
+  const dist = Math.hypot(dx, dy);
+  const maxR = Math.min(rect.width, rect.height) * 0.32;
+
+  let moveX = dx;
+  let moveY = dy;
+  if (dist > maxR && dist > 0) {
+    moveX = (dx / dist) * maxR;
+    moveY = (dy / dist) * maxR;
+  }
+
+  if (joypadKnob) {
+    joypadKnob.style.transform = `translate(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px)`;
+  }
+
+  const deadZone = 4;
+  if (dist > deadZone) {
+    state.joypad.dirX = dx / dist;
+    state.joypad.dirY = dy / dist;
+    state.joypad.strength = clamp((dist - deadZone) / (maxR - deadZone), 0.35, 1);
+  } else {
+    state.joypad.dirX = 0;
+    state.joypad.dirY = 0;
+    state.joypad.strength = 0;
+  }
+  e.preventDefault();
+}
+
+if (joypadBase) {
+  joypadBase.addEventListener('pointerdown', e => {
+    Sound.ensure();
+    state.joypad.active = true;
+    state.joypad.id = e.pointerId;
+    if (joypadKnob) joypadKnob.classList.remove('released');
+    try { joypadBase.setPointerCapture(e.pointerId); } catch (err) {}
+
+    // 摇杆推动时，取消之前的轻点寻路目标
+    state.tapPath = null;
+    state.tapTarget = null;
+
+    handleJoypadMove(e);
+    e.preventDefault();
+    e.stopPropagation();
+  }, { passive: false });
+
+  joypadBase.addEventListener('pointermove', handleJoypadMove, { passive: false });
+  joypadBase.addEventListener('pointerup', e => {
+    if (e.pointerId === state.joypad.id) resetJoypad();
+  });
+  joypadBase.addEventListener('pointercancel', e => {
+    if (e.pointerId === state.joypad.id) resetJoypad();
+  });
+}
 
 window.addEventListener('keydown', e => {
   if (state.phase === 'play' && (e.code === 'Space' || e.key === ' ' || e.key === 'j' || e.key === 'J')) {
@@ -3618,11 +3668,13 @@ function updateToolBtns() {
   const soundOn = Sound.isOn();
   for (const id of ['btnSound', 'btnHomeSound']) {
     const el = $(id);
+    if (!el) continue;
     el.innerHTML = soundOn ? ICON_SOUND_ON : ICON_SOUND_OFF;
     el.setAttribute('aria-label', soundOn ? '关闭声音' : '打开声音');
   }
   for (const id of ['btnRotate', 'btnHomeRotate']) {
     const el = $(id);
+    if (!el) continue;
     el.innerHTML = ICON_ROTATE;
     el.classList.toggle('active', state.rotated);
     el.setAttribute('aria-label', state.rotated ? '恢复竖屏' : '旋转横屏');
@@ -3630,6 +3682,7 @@ function updateToolBtns() {
   const isFull = !!getFullscreenEl() || isStandaloneMode();
   for (const id of ['btnFull', 'btnHomeFull']) {
     const el = $(id);
+    if (!el) continue;
     el.innerHTML = isFull ? ICON_FULL_EXIT : ICON_FULL_ENTER;
     el.classList.toggle('active', isFull);
   }
@@ -3924,6 +3977,9 @@ function goHome() {
   state.gift = null;
   state.collected = 0;
   $('hud').classList.add('hidden');
+  const gp = $('gamepadBar');
+  if (gp) gp.classList.add('hidden');
+  resetJoypad();
   $('win').classList.add('hidden');
   $('newStickers').classList.add('hidden');
   $('stickerModal').classList.add('hidden');
@@ -3934,6 +3990,7 @@ function goHome() {
 }
 
 function showWinOverlay() {
+  resetJoypad();
   const wrap = $('winStars');
   wrap.innerHTML = '';
   for (const s of state.stars) {
@@ -4118,12 +4175,12 @@ if (tabExplore) {
   });
 }
 
-$('btnSound').addEventListener('click', toggleSound);
-$('btnHomeSound').addEventListener('click', toggleSound);
-$('btnRotate').addEventListener('click', toggleRotate);
-$('btnHomeRotate').addEventListener('click', toggleRotate);
-$('btnFull').addEventListener('click', toggleFullscreen);
-$('btnHomeFull').addEventListener('click', toggleFullscreen);
+if ($('btnSound')) $('btnSound').addEventListener('click', toggleSound);
+if ($('btnHomeSound')) $('btnHomeSound').addEventListener('click', toggleSound);
+if ($('btnRotate')) $('btnRotate').addEventListener('click', toggleRotate);
+if ($('btnHomeRotate')) $('btnHomeRotate').addEventListener('click', toggleRotate);
+if ($('btnFull')) $('btnFull').addEventListener('click', toggleFullscreen);
+if ($('btnHomeFull')) $('btnHomeFull').addEventListener('click', toggleFullscreen);
 
 $('btnCloseSticker').addEventListener('click', () => {
   Sound.click();
@@ -4303,6 +4360,16 @@ drawLogo();
 initAppleTouchIcon();
 updateToolBtns();
 renderHome();
+
+try {
+  const hash = window.location.hash || '';
+  const hashMatch = hash.match(/level=(\d+)/);
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoLevel = hashMatch ? parseInt(hashMatch[1], 10) : parseInt(urlParams.get('level') || '', 10);
+  if (autoLevel >= 1 && autoLevel <= TOTAL_LEVELS) {
+    startLevel(autoLevel);
+  }
+} catch (e) { /* ignore */ }
 
 // 开发/测试用的小接口
 window.__migong = {
