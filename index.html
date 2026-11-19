@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#b9e3a4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="小兔找萝卜">
-<title>小兔找萝卜 · 宝宝迷宫</title>
+<title>小兔找萝卜 · 宝宝迷宫 · 全40关</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥕</text></svg>">
 <link rel="apple-touch-icon" id="appleTouchIcon" href="">
 <style>
@@ -164,6 +167,23 @@
   .total-max{ opacity:.6; }
   .section-hint{ font-size:11px; font-weight:400; color:#a0ab93; }
   .section-hint.all{ color:#c58e00; font-weight:700; }
+
+  /* ---------- 篇章快速切换 Tab ---------- */
+  .chapter-tabs{
+    display:flex; gap:5px; margin:4px 0 7px; justify-content:center; flex-wrap:nowrap; overflow-x:auto; padding:2px 1px;
+    scrollbar-width:none;
+  }
+  .chapter-tabs::-webkit-scrollbar{ display:none; }
+  .chapter-tab{
+    font-family:inherit; font-size:11px; font-weight:800; border:none; border-radius:999px;
+    padding:4px 8px; background:#f5eed8; color:#856e3b; cursor:pointer;
+    box-shadow:0 2px 0 #ded0aa; transition:all .15s ease; white-space:nowrap;
+  }
+  .chapter-tab:active{ transform:translateY(1px); }
+  .chapter-tab.active{
+    background:#ffd74a; color:#704400; box-shadow:0 3px 0 #e4b520;
+    transform:translateY(-1px);
+  }
 
   .level-scroll{
     max-width:340px; margin:0 auto; padding:4px 5px 6px;
@@ -376,6 +396,82 @@
   }
   .link-btn:active{ color:#6e825c; }
 
+  /* ---------- 局中贴纸开箱特写与放大展示 ---------- */
+  #giftRevealModal{ z-index:60; }
+  .reveal-card{
+    background:linear-gradient(180deg, #fffdf8 0%, #fff6e0 100%);
+    border-radius:32px; padding:20px 22px 18px;
+    width:min(380px, 92vw); max-width:92vw;
+    box-shadow:0 24px 60px rgba(220,140,20,.32), inset 0 0 0 4px #ffeab3;
+    text-align:center; position:relative; overflow:hidden;
+    animation:revealPop .48s cubic-bezier(.2,1.6,.4,1) both;
+  }
+  @keyframes revealPop{
+    0%{ transform:scale(.4) rotate(-4deg); opacity:0; }
+    70%{ transform:scale(1.04) rotate(1deg); opacity:1; }
+    100%{ transform:scale(1) rotate(0); opacity:1; }
+  }
+  .reveal-badge{
+    display:inline-block; font-size:12px; font-weight:800; color:#85550a;
+    background:#ffeaa8; border:1.5px solid #ffcf54; border-radius:999px;
+    padding:4px 14px; margin-bottom:8px;
+  }
+  .reveal-title{
+    font-size:24px; font-weight:900; color:#5c3e0e; margin:0 0 4px;
+    letter-spacing:1px;
+  }
+  .reveal-source-pill{
+    display:inline-block; font-size:11px; font-weight:700; color:#9c7324;
+    background:#fffaf0; border:1px solid #fedfa2; border-radius:999px;
+    padding:2px 10px; margin-bottom:10px;
+  }
+  .reveal-stage{
+    position:relative; width:150px; height:150px; margin:4px auto 10px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .reveal-halo{
+    position:absolute; inset:-14px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,225,120,.9) 0%, rgba(255,200,60,.4) 55%, transparent 75%);
+    animation:haloSpin 8s linear infinite; pointer-events:none;
+  }
+  @keyframes haloSpin{
+    0%{ transform:scale(1) rotate(0deg); }
+    50%{ transform:scale(1.12) rotate(180deg); }
+    100%{ transform:scale(1) rotate(360deg); }
+  }
+  .reveal-orb{
+    position:relative; width:120px; height:120px; border-radius:50%;
+    background:linear-gradient(145deg, #ffffff 20%, #fff4cf 80%);
+    box-shadow:0 8px 24px rgba(230,160,30,.35), inset 0 3px 0 #ffffff, inset 0 -3px 8px rgba(220,150,20,.2);
+    border:3px solid #ffda66;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .reveal-icon{
+    font-size:66px; line-height:1; display:inline-block;
+    filter:drop-shadow(0 4px 10px rgba(120,70,10,.22));
+    transition:transform .22s cubic-bezier(.2,1.4,.4,1);
+    transform-origin:center center;
+  }
+  .reveal-desc{
+    font-size:13px; line-height:1.45; color:#785721; margin:0 0 14px;
+    padding:0 8px; font-weight:600;
+  }
+  .reveal-actions{
+    display:flex; gap:10px; justify-content:center; align-items:center;
+  }
+  .reveal-zoom-btn{
+    font-family:inherit; font-size:13px; font-weight:800; color:#704b12;
+    background:#ffefc2; border:2px solid #fed26b; border-radius:18px;
+    padding:9px 13px; cursor:pointer; box-shadow:0 3px 0 #e8ba46;
+    display:flex; align-items:center; gap:4px; transition:transform .12s;
+  }
+  .reveal-zoom-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 #e8ba46; }
+  .reveal-confirm-btn{
+    flex:1; max-width:180px; margin:0 !important; font-size:16px; padding:10px 16px;
+  }
+
   /* ---------- 横屏分栏 & 矮屏紧凑自适应（基于 #stage 逻辑宽高） ---------- */
   #stage.landscape .home-card{
     max-width:min(740px, 100%); width:min(740px, 100%);
@@ -406,6 +502,14 @@
   #stage.compact-h .card h2{ font-size:24px; }
   #stage.compact-h .new-sticker-orb{ width:58px; height:58px; font-size:34px; }
   #stage.compact-h .sticker-stage{ height:164px; margin:4px auto 8px; }
+  #stage.compact-h .reveal-card{ padding:12px 16px 10px; }
+  #stage.compact-h .reveal-title{ font-size:20px; }
+  #stage.compact-h .reveal-stage{ width:120px; height:120px; margin:2px auto 6px; }
+  #stage.compact-h .reveal-orb{ width:96px; height:96px; }
+  #stage.compact-h .reveal-icon{ font-size:52px; }
+  #stage.compact-h .reveal-desc{ font-size:12px; margin-bottom:8px; }
+  #stage.compact-h .reveal-zoom-btn{ padding:7px 10px; font-size:12px; }
+  #stage.compact-h .reveal-confirm-btn{ padding:8px 14px; font-size:15px; }
 
   #stage.compact-w .pill{ padding:5px 10px; font-size:13.5px; }
   #stage.compact-w .star-icons{ font-size:17px; }
@@ -580,7 +684,7 @@
 <div id="home" class="overlay home-overlay">
   <div class="card home-card">
     <div class="home-top-bar">
-      <span class="home-tag">🥕 3岁+ 宝宝迷宫</span>
+      <span class="home-tag">🥕 3岁+ 宝宝迷宫 · 全40关冒险 · v2.2</span>
       <div class="home-tools">
         <button class="icon-btn" id="btnHomeSound" aria-label="声音开关" title="声音开关"></button>
       </div>
@@ -588,7 +692,7 @@
     <div class="home-col-left">
       <div class="logo"><canvas id="logoScreen" width="600" height="360"></canvas></div>
       <h1>小兔找萝卜</h1>
-      <p class="sub">牵着小白兔，穿过花园，找到大萝卜！</p>
+      <p class="sub">牵着小白兔，穿过40关奇妙迷宫！</p>
       <button class="big-btn" id="btnStart">开始玩</button>
       <p class="start-hint" id="startHint">从第 1 关开始</p>
     </div>
@@ -597,7 +701,14 @@
       <div class="home-section">
         <div class="section-title">
           <span>选一关 <span class="section-hint" id="levelScrollHint"></span></span>
-          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/88</span></span>
+          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/119</span></span>
+        </div>
+        <div class="chapter-tabs" id="chapterTabs">
+          <button class="chapter-tab active" data-chap="all" type="button">全部 (40关)</button>
+          <button class="chapter-tab" data-chap="1" type="button">🥕 1~10</button>
+          <button class="chapter-tab" data-chap="2" type="button">🗝️ 11~20</button>
+          <button class="chapter-tab" data-chap="3" type="button">⚔️ 21~30</button>
+          <button class="chapter-tab" data-chap="4" type="button">👾 31~40</button>
         </div>
         <div class="level-scroll" id="levelScroll">
           <div class="level-grid" id="levelGrid"></div>
@@ -661,6 +772,25 @@
       <button class="nav-pill-btn" id="btnNextSticker" type="button" aria-label="下一张贴纸">›</button>
     </div>
     <button class="big-btn" id="btnCloseSticker">真棒！</button>
+  </div>
+</div>
+
+<div id="giftRevealModal" class="overlay hidden">
+  <div class="card reveal-card">
+    <div class="reveal-badge" id="revealBadge">🎁 发现神秘探索贴纸！</div>
+    <h2 id="revealStickerName" class="reveal-title">魔法提灯</h2>
+    <div class="reveal-source-pill" id="revealStickerSource">🎁 第 20 关神秘宝箱</div>
+    <div class="reveal-stage" id="revealStage" title="轻点可放大仔细看">
+      <div class="reveal-halo"></div>
+      <div class="reveal-orb" id="revealOrb">
+        <span id="revealIcon" class="reveal-icon">🏮</span>
+      </div>
+    </div>
+    <p class="reveal-desc" id="revealDesc">在第 20 关迷宫中发现的驱散黑暗的暖光提灯！</p>
+    <div class="reveal-actions">
+      <button class="reveal-zoom-btn" id="btnRevealZoom" type="button">🔍 放大仔细看 <span id="revealZoomTag">1.0×</span></button>
+      <button class="big-btn reveal-confirm-btn" id="btnCollectReveal" type="button">✨ 收入贴纸册</button>
+    </div>
   </div>
 </div>
 
@@ -844,6 +974,20 @@ const Sound = (() => {
     monsterBump() {
       tone(220, 0.14, { type: 'sine', vol: 0.18, slide: 120 });
     },
+    treasureFanfare() {
+      // 华丽盛大的宝藏开箱大和弦琶音
+      const notes = [
+        { f: 523.25, t: 0.00, d: 0.16 }, // C5
+        { f: 659.25, t: 0.08, d: 0.16 }, // E5
+        { f: 783.99, t: 0.16, d: 0.18 }, // G5
+        { f: 1046.50, t: 0.26, d: 0.35 }, // C6
+        { f: 1318.51, t: 0.36, d: 0.45 }, // E6 华丽泛音
+      ];
+      notes.forEach(n => {
+        tone(n.f, n.d, { type: 'triangle', vol: 0.26, when: n.t });
+        tone(n.f * 1.5, n.d * 0.7, { type: 'sine', vol: 0.16, when: n.t + 0.02 });
+      });
+    },
     startMusic() {
       if (!on) return;
       if (!ensure()) return;
@@ -882,18 +1026,22 @@ const STAR_STICKERS = [
 ];
 
 const EXPLORE_STICKERS = [
+  // 1~10关：小试身手篇
   { id: 'exp_1',  level: 2,  emoji: '🍯', name: '蜂蜜罐', category: 'explore', desc: '在第 2 关迷宫角落神秘宝箱中发现的香纯野蜂蜜！', source: '🎁 在第 2 关迷宫宝箱中发现' },
-  { id: 'exp_2',  level: 4,  emoji: '🌻', name: '向日葵', category: 'explore', desc: '在第 4 关迷宫支路发现的追随阳光的金色大向日葵！', source: '🎁 在第 4 关迷宫宝箱中发现' },
-  { id: 'exp_3',  level: 7,  emoji: '💎', name: '蓝宝石', category: 'explore', desc: '在第 7 关偏僻深处挖出的璀璨魔法蓝宝石！', source: '🎁 在第 7 关迷宫宝箱中发现' },
-  { id: 'exp_4',  level: 9,  emoji: '🧭', name: '探险罗盘', category: 'explore', desc: '在第 9 关密道盲端中拾取的金色方向罗盘！', source: '🎁 在第 9 关迷宫宝箱中发现' },
-  { id: 'exp_5',  level: 12, emoji: '🗝️', name: '古铜秘钥', category: 'explore', desc: '在第 12 关密室角落找到的刻有神秘铭文的古老钥匙！', source: '🎁 在第 12 关迷宫宝箱中发现' },
-  { id: 'exp_6',  level: 14, emoji: '📜', name: '藏宝图', category: 'explore', desc: '在第 14 关宝箱中发现的羊皮纸迷宫藏宝图！', source: '🎁 在第 14 关迷宫宝箱中发现' },
-  { id: 'exp_7',  level: 17, emoji: '🏮', name: '魔法提灯', category: 'explore', desc: '在第 17 关迷宫中发现的驱散黑暗的暖光提灯！', source: '🎁 在第 17 关迷宫宝箱中发现' },
-  { id: 'exp_8',  level: 19, emoji: '🔮', name: '占卜水晶', category: 'explore', desc: '在第 19 关密室尽头发现的能看穿宝藏的纯净水晶球！', source: '🎁 在第 19 关迷宫宝箱中发现' },
-  { id: 'exp_9',  level: 22, emoji: '🛡️', name: '勇气圆盾', category: 'explore', desc: '在第 22 关怪兽迷宫中找到的守护小兔的纯银圆盾！', source: '🎁 在第 22 关迷宫宝箱中发现' },
-  { id: 'exp_10', level: 24, emoji: '⚔️', name: '圣光之剑', category: 'explore', desc: '在第 24 关怪兽洞穴中拔出的闪烁蓝白光芒的传说小剑！', source: '🎁 在第 24 关迷宫宝箱中发现' },
-  { id: 'exp_11', level: 27, emoji: '🏅', name: '勇士勋章', category: 'explore', desc: '在第 27 关深处发现的颁发给无畏小兔的最高勇士勋章！', source: '🎁 在第 27 关迷宫宝箱中发现' },
-  { id: 'exp_12', level: 30, emoji: '🏆', name: '终极金杯', category: 'explore', desc: '在第 30 关迷宫终极宝箱中获得的至高无上胜利金杯！', source: '🎁 在第 30 关迷宫宝箱中发现' },
+  { id: 'exp_2',  level: 5,  emoji: '🌻', name: '向日葵', category: 'explore', desc: '在第 5 关迷宫支路发现的追随阳光的金色大向日葵！', source: '🎁 在第 5 关迷宫宝箱中发现' },
+  { id: 'exp_3',  level: 8,  emoji: '💎', name: '蓝宝石', category: 'explore', desc: '在第 8 关偏僻深处挖出的璀璨魔法蓝宝石！', source: '🎁 在第 8 关迷宫宝箱中发现' },
+  // 11~20关：密室寻匙篇
+  { id: 'exp_4',  level: 11, emoji: '🧭', name: '探险罗盘', category: 'explore', desc: '在第 11 关密室盲端中拾取的金色方向罗盘！', source: '🎁 在第 11 关迷宫宝箱中发现' },
+  { id: 'exp_5',  level: 14, emoji: '🗝️', name: '古铜秘钥', category: 'explore', desc: '在第 14 关密室角落找到的刻有神秘铭文的古老钥匙！', source: '🎁 在第 14 关迷宫宝箱中发现' },
+  { id: 'exp_6',  level: 17, emoji: '📜', name: '藏宝图', category: 'explore', desc: '在第 17 关宝箱中发现的羊皮纸迷宫藏宝图！', source: '🎁 在第 17 关迷宫宝箱中发现' },
+  { id: 'exp_7',  level: 20, emoji: '🏮', name: '魔法提灯', category: 'explore', desc: '在第 20 关密室深处发现的驱散黑暗的暖光提灯！', source: '🎁 在第 20 关迷宫宝箱中发现' },
+  // 21~30关：勇士大冒险篇
+  { id: 'exp_8',  level: 23, emoji: '🔮', name: '占卜水晶', category: 'explore', desc: '在第 23 关怪兽洞穴尽头发现的能看穿宝藏的纯净水晶球！', source: '🎁 在第 23 关迷宫宝箱中发现' },
+  { id: 'exp_9',  level: 26, emoji: '🛡️', name: '勇气圆盾', category: 'explore', desc: '在第 26 关怪兽迷宫中找到的守护小兔的纯银圆盾！', source: '🎁 在第 26 关迷宫宝箱中发现' },
+  { id: 'exp_10', level: 29, emoji: '⚔️', name: '圣光之剑', category: 'explore', desc: '在第 29 关怪兽洞穴中拔出的闪烁蓝白光芒的传说小剑！', source: '🎁 在第 29 关迷宫宝箱中发现' },
+  // 31~40关：巡逻大挑战篇（全新篇章！）
+  { id: 'exp_11', level: 34, emoji: '🏅', name: '勇士勋章', category: 'explore', desc: '在第 34 关巡逻怪兽环绕的神秘宝箱中获得的勇士勋章！', source: '🎁 在第 34 关迷宫宝箱中发现' },
+  { id: 'exp_12', level: 40, emoji: '🏆', name: '终极金杯', category: 'explore', desc: '在第 40 关终极巡逻大迷宫宝箱中获得的至高无上胜利金杯！', source: '🎁 在第 40 关迷宫宝箱中发现' },
 ];
 
 const ALL_STICKERS = [...STAR_STICKERS, ...EXPLORE_STICKERS];
@@ -922,6 +1070,10 @@ function loadSave() {
         if (Number.isFinite(bank)) out.starBank = clamp(Math.round(bank), 0, 9999);
         const cur = Number(data.current);
         if (Number.isFinite(cur)) out.current = clamp(Math.round(cur), 1, TOTAL_LEVELS);
+        // 老存档平滑过渡：若已通关第30关，自动推进至第31关巡逻大挑战
+        if (out.best[30] !== undefined && out.current <= 30) {
+          out.current = 31;
+        }
         if (Array.isArray(data.foundStickers)) {
           out.foundStickers = data.foundStickers.filter(id => typeof id === 'string' && EXPLORE_STICKERS.some(s => s.id === id));
         }
@@ -2628,6 +2780,61 @@ function showExploreToast(msg) {
   }, 2600);
 }
 
+/* =========================================================
+   局中神秘贴纸开箱大特写与多级放大展示
+   ========================================================= */
+let revealZoomLevel = 0; // 0: 1.0x, 1: 1.6x, 2: 2.4x
+const REVEAL_ZOOMS = [
+  { scale: 1.0, text: '1.0×' },
+  { scale: 1.6, text: '1.6×' },
+  { scale: 2.4, text: '2.4×' }
+];
+
+function updateRevealZoom() {
+  const z = REVEAL_ZOOMS[revealZoomLevel];
+  const icon = $('revealIcon');
+  if (icon) {
+    icon.style.transform = 'scale(' + z.scale + ')';
+  }
+  const tag = $('revealZoomTag');
+  if (tag) {
+    tag.textContent = z.text;
+  }
+}
+
+function toggleRevealZoom() {
+  revealZoomLevel = (revealZoomLevel + 1) % REVEAL_ZOOMS.length;
+  Sound.click();
+  updateRevealZoom();
+}
+
+function showInGameStickerReveal(sticker, isNew) {
+  state.paused = true; // 局中暂停移动与交互判定
+  revealZoomLevel = 0;
+  updateRevealZoom();
+
+  $('revealBadge').textContent = isNew ? '🎉 首次发现全新探索贴纸！' : '✨ 再次发现探索宝藏！';
+  $('revealStickerName').textContent = sticker.name;
+  $('revealStickerSource').textContent = sticker.source;
+  $('revealDesc').textContent = sticker.desc;
+  $('revealIcon').textContent = sticker.emoji;
+
+  const modal = $('giftRevealModal');
+  if (modal) modal.classList.remove('hidden');
+
+  Sound.ensure();
+  Sound.treasureFanfare();
+}
+
+function closeInGameStickerReveal() {
+  const modal = $('giftRevealModal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  Sound.click();
+  Sound.collect();
+  modal.classList.add('hidden');
+  state.paused = false; // 恢复游戏运行
+}
+
 function drawCarrotArt(g, x, y, s, t) {
   const bob = Math.sin(t * 2.6) * s * 0.05;
   g.save();
@@ -3191,16 +3398,17 @@ function checkCollect() {
     const gdy = b.y - (state.gift.r + 0.5);
     if (gdx * gdx + gdy * gdy < 0.32) {
       state.gift.opened = true;
-      if (!save.foundStickers.includes(state.gift.sticker.id)) {
+      const isNew = !save.foundStickers.includes(state.gift.sticker.id);
+      if (isNew) {
         save.foundStickers.push(state.gift.sticker.id);
         persistSave();
         state.newStickers.push(state.gift.sticker);
       }
-      Sound.keyPickup();
       addGiftBurst(ox + (state.gift.c + 0.5) * cell, oy + (state.gift.r + 0.5) * cell, cell);
-      showExploreToast('🎁 获得探索贴纸「' + state.gift.sticker.name + '」！');
       state.lastProgress = { x: b.x, y: b.y };
       state.progressTimer = 0;
+      // 局中华丽大特写展示弹窗！
+      showInGameStickerReveal(state.gift.sticker, isNew);
     }
   }
 }
@@ -3315,6 +3523,12 @@ function update(dt) {
   state.time += dt;
   const now = performance.now();
   const b = state.bunny;
+
+  if (state.paused) {
+    // 局中贴纸开箱展示中：暂停主角与怪兽移动，但维持粒子更新渲染
+    updateParticles(dt);
+    return;
+  }
 
   if (state.phase === 'play') {
     const desired = computeDesired();
@@ -3933,12 +4147,38 @@ function renderHome() {
   $('totalMaxStars').textContent = '/' + MAX_STARS;
   const cur = clamp(save.current || 1, 1, TOTAL_LEVELS);
   $('startHint').textContent = cur > 1 ? '继续第 ' + cur + ' 关' : '从第 1 关开始';
-  $('levelScrollHint').textContent = '· 全40关冒险';
+
+  state.chapterTab = state.chapterTab || 'all';
+
+  // 同步篇章快速切换 Tab 高亮
+  const chapterTabs = $('chapterTabs');
+  if (chapterTabs && chapterTabs.querySelectorAll) {
+    chapterTabs.querySelectorAll('.chapter-tab').forEach(b => {
+      b.classList.toggle('active', b.dataset.chap === state.chapterTab);
+    });
+  }
+
+  let startIdx = 1, endIdx = TOTAL_LEVELS;
+  if (state.chapterTab === '1') {
+    startIdx = 1; endIdx = 10;
+    $('levelScrollHint').textContent = '· 🥕小试身手 (1~10关)';
+  } else if (state.chapterTab === '2') {
+    startIdx = 11; endIdx = 20;
+    $('levelScrollHint').textContent = '· 🗝️密室寻匙 (11~20关)';
+  } else if (state.chapterTab === '3') {
+    startIdx = 21; endIdx = 30;
+    $('levelScrollHint').textContent = '· ⚔️勇士大冒险 (21~30关)';
+  } else if (state.chapterTab === '4') {
+    startIdx = 31; endIdx = 40;
+    $('levelScrollHint').textContent = '· 👾巡逻大挑战 (31~40关)';
+  } else {
+    $('levelScrollHint').textContent = '· 全40关大冒险';
+  }
 
   const grid = $('levelGrid');
   grid.innerHTML = '';
   let nextCardEl = null;
-  for (let i = 1; i <= TOTAL_LEVELS; i++) {
+  for (let i = startIdx; i <= endIdx; i++) {
     const cleared = save.best[i] !== undefined;
     const stars = save.best[i] || 0;
     const card = document.createElement('button');
@@ -4261,6 +4501,34 @@ if (tabExplore) {
   });
 }
 
+const chapterTabs = $('chapterTabs');
+if (chapterTabs) {
+  chapterTabs.addEventListener('click', e => {
+    const btn = e.target.closest('.chapter-tab');
+    if (!btn) return;
+    const chap = btn.dataset.chap;
+    if (chap && chap !== state.chapterTab) {
+      state.chapterTab = chap;
+      Sound.ensure();
+      Sound.click();
+      renderHome();
+    }
+  });
+}
+
+// 局中贴纸开箱展示事件绑定
+if ($('btnRevealZoom')) $('btnRevealZoom').addEventListener('click', toggleRevealZoom);
+if ($('revealStage')) $('revealStage').addEventListener('click', toggleRevealZoom);
+if ($('btnCollectReveal')) $('btnCollectReveal').addEventListener('click', closeInGameStickerReveal);
+const giftRevealModal = $('giftRevealModal');
+if (giftRevealModal) {
+  giftRevealModal.addEventListener('click', e => {
+    if (e.target === giftRevealModal) {
+      closeInGameStickerReveal();
+    }
+  });
+}
+
 if ($('btnSound')) $('btnSound').addEventListener('click', toggleSound);
 if ($('btnHomeSound')) $('btnHomeSound').addEventListener('click', toggleSound);
 if ($('btnRotate')) $('btnRotate').addEventListener('click', toggleRotate);
@@ -4464,6 +4732,8 @@ window.__migong = {
   heroAttack,
   win: doWin,
   toggleRotate,
+  showInGameStickerReveal,
+  closeInGameStickerReveal,
   setBunny(c, r) {
     state.bunny.x = c + 0.5;
     state.bunny.y = r + 0.5;
