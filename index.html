@@ -1175,10 +1175,10 @@ const state = {
   door: null,
   gift: null,
   monsters: [],
-  sword: { attacking: false, attackT: 0, cooldown: 0 },
+  sword: { attacking: false, attackT: 0, cooldown: 0, attackDir: 'right' },
   doorPrompt: { text: '', until: 0 },
   stickerTab: 'star',              // star | explore
-  bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0, hp: 3, maxHp: 3, invulnT: 0 },
+  bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, facingDir: 'right', walkT: 0, bumpT: 0, hp: 3, maxHp: 3, invulnT: 0 },
   pointer: {
     down: false, x: 0, y: 0, id: null,
     sx: 0, sy: 0, cx: 0, cy: 0,
@@ -1724,7 +1724,7 @@ function startLevel(n) {
   state.door = null;
   state.gift = null;
   state.monsters = [];
-  state.sword = { attacking: false, attackT: 0, cooldown: 0 };
+  state.sword = { attacking: false, attackT: 0, cooldown: 0, attackDir: 'right' };
   state.doorPrompt = { text: '', until: 0 };
 
   if (n >= 11) {
@@ -1742,7 +1742,7 @@ function startLevel(n) {
 
   state.bunny = {
     x: start.c + 0.5, y: start.r + 0.5,
-    vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0,
+    vx: 0, vy: 0, face: 1, facingDir: 'right', walkT: 0, bumpT: 0,
     hp: 3, maxHp: 3, invulnT: 0,
   };
   resetPointer();
@@ -2155,6 +2155,14 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
   g.fill();
 
   g.translate(0, -bob);
+  if (opts.attacking) {
+    const p = opts.attackProgress || 0;
+    if (opts.attackDir === 'up') {
+      g.translate(0, -Math.sin(p * Math.PI) * s * 0.10);
+    } else if (opts.attackDir === 'down') {
+      g.translate(0, Math.sin(p * Math.PI) * s * 0.07);
+    }
+  }
   g.scale(face, 1 + squash);
 
   const fur = '#fffdf8';
@@ -2356,13 +2364,31 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
     g.fill();
     g.restore();
 
-    // 3. 右手握银蓝小宝剑（挥剑攻击动画）
-    g.save();
-    g.translate(s * 0.18, s * 0.08);
+    // 3. 右手握银蓝小宝剑（根据 attackDir 支持上、下、左、右全向攻击动画）
+    const atkProgress = opts.attackProgress || 0;
+    let handX = s * 0.18, handY = s * 0.08;
     let swordAngle = -Math.PI * 0.15;
+    let slashDir = 'forward';
+
     if (opts.attacking) {
-      swordAngle = -Math.PI * 0.15 + Math.sin((opts.attackProgress || 0) * Math.PI) * Math.PI * 0.75;
+      if (opts.attackDir === 'up') {
+        slashDir = 'up';
+        handX = s * 0.06;
+        handY = -s * 0.16;
+        swordAngle = -Math.PI * 0.85 + Math.sin(atkProgress * Math.PI) * Math.PI * 0.65;
+      } else if (opts.attackDir === 'down') {
+        slashDir = 'down';
+        handX = s * 0.10;
+        handY = s * 0.16;
+        swordAngle = Math.PI * 0.12 + Math.sin(atkProgress * Math.PI) * Math.PI * 0.58;
+      } else {
+        slashDir = 'forward';
+        swordAngle = -Math.PI * 0.15 + Math.sin(atkProgress * Math.PI) * Math.PI * 0.75;
+      }
     }
+
+    g.save();
+    g.translate(handX, handY);
     g.rotate(swordAngle);
     const bL = s * 0.36;
     const bW = s * 0.09;
@@ -2392,9 +2418,17 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
     g.fill();
     g.restore();
 
-    // 4. 挥剑光弧
+    // 4. 挥剑光弧（自适应上、下、左、右）
     if (opts.attacking) {
-      drawSwordSlashArc(g, s * 0.22, 0, s, opts.attackProgress || 0);
+      let arcX = s * 0.22, arcY = 0;
+      if (slashDir === 'up') {
+        arcX = 0;
+        arcY = -s * 0.22;
+      } else if (slashDir === 'down') {
+        arcX = 0;
+        arcY = s * 0.22;
+      }
+      drawSwordSlashArc(g, arcX, arcY, s, atkProgress, slashDir);
     }
   }
 
@@ -2485,12 +2519,22 @@ function drawGiftBoxArt(g, x, y, s, t, gift) {
   g.restore();
 }
 
-function drawSwordSlashArc(g, x, y, s, progress) {
+function drawSwordSlashArc(g, x, y, s, progress, dirMode = 'forward') {
   g.save();
   g.translate(x, y);
-  const r = s * 0.68;
-  const startA = -Math.PI * 0.45;
-  const endA = startA + progress * Math.PI * 0.9;
+  const r = s * 0.70;
+  let startA, sweepA;
+  if (dirMode === 'up') {
+    startA = -Math.PI * 0.92;
+    sweepA = Math.PI * 0.84;
+  } else if (dirMode === 'down') {
+    startA = Math.PI * 0.08;
+    sweepA = Math.PI * 0.84;
+  } else {
+    startA = -Math.PI * 0.45;
+    sweepA = Math.PI * 0.90;
+  }
+  const endA = startA + progress * sweepA;
 
   g.strokeStyle = 'rgba(255, 255, 255, ' + (1 - progress * 0.6).toFixed(2) + ')';
   g.lineWidth = Math.max(3, s * 0.06);
@@ -2509,7 +2553,7 @@ function drawSwordSlashArc(g, x, y, s, progress) {
   const tipY = Math.sin(endA) * r;
   g.fillStyle = '#ffffff';
   g.beginPath();
-  g.arc(tipX, tipY, s * 0.04, 0, TAU);
+  g.arc(tipX, tipY, s * 0.045, 0, TAU);
   g.fill();
   g.restore();
 }
@@ -2813,16 +2857,21 @@ function drawMonsterArt(g, x, y, s, t, m) {
   g.restore();
 }
 
-function addMonsterBurst(x, y, cell) {
+function addMonsterBurst(x, y, cell, dir = 'right') {
   const g = 180;
   const colors = ['#62d3ff', '#ffffff', '#ffd15c', '#ff789a'];
+  let biasVx = 0, biasVy = -30;
+  if (dir === 'up') biasVy = -80;
+  else if (dir === 'down') biasVy = 50;
+  else if (dir === 'left') { biasVx = -50; biasVy = -20; }
+  else if (dir === 'right') { biasVx = 50; biasVy = -20; }
   for (let i = 0; i < 18; i++) {
     const a = (i / 18) * TAU + Math.random() * 0.3;
     const spd = 60 + Math.random() * 120;
     state.particles.push({
       x, y,
-      vx: Math.cos(a) * spd,
-      vy: Math.sin(a) * spd - 30,
+      vx: Math.cos(a) * spd + biasVx,
+      vy: Math.sin(a) * spd + biasVy,
       g,
       drag: 1.5,
       size: Math.max(3, cell * (0.05 + Math.random() * 0.05)),
@@ -3609,12 +3658,58 @@ function heroAttack() {
   if (state.level < 21) return;
   if (state.sword.cooldown > 0) return;
 
+  const b = state.bunny;
+
+  // 1. 判定攻击朝向：优先即时操作方向，其次就近怪兽锁定，最后沿用移动朝向
+  let atkDir = b.facingDir || 'right';
+  if (state.joypad && state.joypad.active && state.joypad.strength > 0.2) {
+    const jx = state.joypad.dirX, jy = state.joypad.dirY;
+    if (Math.abs(jy) > Math.abs(jx) * 0.9) {
+      atkDir = jy < 0 ? 'up' : 'down';
+    } else {
+      atkDir = jx > 0 ? 'right' : 'left';
+    }
+  } else if (state.keys && state.keys.size > 0) {
+    if (state.keys.has('up')) atkDir = 'up';
+    else if (state.keys.has('down')) atkDir = 'down';
+    else if (state.keys.has('left')) atkDir = 'left';
+    else if (state.keys.has('right')) atkDir = 'right';
+  } else {
+    // 静止状态，智能锁定 1.35 格内最近存活怪兽
+    let nearestM = null;
+    let minDist = 1.35;
+    if (state.monsters && state.monsters.length) {
+      for (const m of state.monsters) {
+        if (!m.alive) continue;
+        const d = Math.hypot(m.x - b.x, m.y - b.y);
+        if (d <= minDist) {
+          minDist = d;
+          nearestM = m;
+        }
+      }
+    }
+    if (nearestM) {
+      const dx = nearestM.x - b.x;
+      const dy = nearestM.y - b.y;
+      if (Math.abs(dy) > Math.abs(dx) * 0.9) {
+        atkDir = dy < 0 ? 'up' : 'down';
+      } else {
+        atkDir = dx > 0 ? 'right' : 'left';
+      }
+    }
+  }
+
+  if (atkDir === 'left') b.face = -1;
+  else if (atkDir === 'right') b.face = 1;
+
+  state.sword.attackDir = atkDir;
+  b.facingDir = atkDir;
+
   state.sword.attacking = true;
   state.sword.attackT = 0.28;
   state.sword.cooldown = 0.35;
   Sound.swordSlash();
 
-  const b = state.bunny;
   const attackRadius = 1.35;
   const { cell, ox, oy } = state.layout;
 
@@ -3629,7 +3724,7 @@ function heroAttack() {
         m.alive = false;
         m.hitT = 0.32;
         hitAny = true;
-        addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell);
+        addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell, atkDir);
       }
     }
   }
@@ -3657,7 +3752,12 @@ function update(dt) {
     b.vy += (desired.y - b.vy) * k;
     if (Math.hypot(b.vx, b.vy) > 0.15) {
       b.walkT += dt;
-      if (Math.abs(b.vx) > 0.35) b.face = b.vx > 0 ? 1 : -1;
+      if (Math.abs(b.vy) > Math.abs(b.vx) * 1.15) {
+        b.facingDir = b.vy < 0 ? 'up' : 'down';
+      } else {
+        b.facingDir = b.vx > 0 ? 'right' : 'left';
+        b.face = b.vx > 0 ? 1 : -1;
+      }
     }
     if (b.bumpT > 0) b.bumpT = Math.max(0, b.bumpT - dt);
     if (b.invulnT > 0) b.invulnT = Math.max(0, b.invulnT - dt);
@@ -3970,12 +4070,14 @@ function render(t) {
       happy: state.phase === 'win',
       bump: b.bumpT,
       invuln: (b.invulnT || 0) > 0,
+      facingDir: b.facingDir || 'right',
     };
 
     if (state.level >= 21) {
       bunnyOpts.knight = true;
       bunnyOpts.attacking = state.sword.attackT > 0;
       bunnyOpts.attackProgress = 1 - (state.sword.attackT / 0.28);
+      bunnyOpts.attackDir = state.sword.attackDir || 'right';
     } else if (state.level >= 11) {
       bunnyOpts.explorer = true;
     }
