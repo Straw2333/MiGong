@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="小兔找萝卜">
-<title>小兔找萝卜 · 宝宝迷宫 · 全40关</title>
+<title>小兔找萝卜 · 宝宝迷宫 · 全50关大决战</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥕</text></svg>">
 <link rel="apple-touch-icon" id="appleTouchIcon" href="">
 <style>
@@ -87,6 +87,41 @@
   .star-icons{ display:flex; gap:2px; font-size:19px; line-height:1; }
   .star-icon{ display:inline-block; color:#cfd8c6; transition:color .18s, transform .18s; }
   .star-icon.on{ color:var(--gold); text-shadow:0 0 8px rgba(255,200,60,.55); }
+
+  /* ---------- 顶部生命值心心栏（41~50关专属） ---------- */
+  .hp-pill{
+    background:linear-gradient(180deg,#fff5f5,#ffe8e8);
+    border:1.5px solid #ff9999;
+    box-shadow:0 3px 0 #e67373, 0 6px 14px rgba(220,50,50,.14);
+    padding:4px 9px 3px; font-weight:800; font-size:13px; line-height:1;
+  }
+  .hp-icons{ font-size:15px; letter-spacing:2px; line-height:1; display:flex; align-items:center; }
+  .hp-pill.shake{ animation:hpShake .32s ease-in-out both; }
+  @keyframes hpShake{
+    0%, 100%{ transform:translateX(0); }
+    25%{ transform:translateX(-3px) scale(1.08); }
+    75%{ transform:translateX(3px) scale(1.08); }
+  }
+
+  /* ---------- 失败重试弹窗 ---------- */
+  #failModal{ z-index:45; }
+  .fail-card{
+    background:linear-gradient(180deg, #fffdfb 0%, #fff2ee 100%);
+    border-radius:30px; padding:22px 20px 18px;
+    width:min(360px, 92vw); max-width:92vw;
+    box-shadow:0 24px 60px rgba(180,50,30,.25), inset 0 0 0 3px #ffded9;
+    text-align:center;
+    animation:pop .38s cubic-bezier(.2,1.5,.4,1) both;
+  }
+  .fail-emoji{ font-size:46px; line-height:1; margin-bottom:4px; animation:failBounce 1.2s infinite ease-in-out; }
+  @keyframes failBounce{
+    0%, 100%{ transform:translateY(0) rotate(0deg); }
+    50%{ transform:translateY(-6px) rotate(-6deg); }
+  }
+  .retry-btn{
+    background:linear-gradient(180deg, #ff7e54, #eb4a2a) !important;
+    box-shadow:0 6px 0 #b3250b, 0 14px 28px rgba(220,50,20,.32) !important;
+  }
   .icon-btn{
     position:relative; z-index:2;
     width:42px; height:42px; border-radius:50%; border:none; padding:0;
@@ -653,6 +688,7 @@
     <div class="pill" id="levelPill">第 1 关</div>
     <div class="pill star-pill" aria-label="已收集的星星"><span class="star-icons" id="starIcons"></span></div>
     <div class="pill key-pill hidden" id="keyPill" aria-label="钥匙状态"><span class="key-icon" id="keyIcon">🗝️</span><span id="keyLabel">寻找钥匙</span></div>
+    <div class="pill hp-pill hidden" id="hpPill" aria-label="生命值"><span class="hp-icons" id="hpIcons">❤️❤️❤️</span></div>
   </div>
   <div class="hud-right">
     <button class="icon-btn" id="btnSound" aria-label="声音开关" title="声音开关"></button>
@@ -684,7 +720,7 @@
 <div id="home" class="overlay home-overlay">
   <div class="card home-card">
     <div class="home-top-bar">
-      <span class="home-tag">🥕 3岁+ 宝宝迷宫 · 全40关冒险 · v2.2</span>
+      <span class="home-tag">🥕 3岁+ 宝宝迷宫 · 全50关大决战 · v2.3</span>
       <div class="home-tools">
         <button class="icon-btn" id="btnHomeSound" aria-label="声音开关" title="声音开关"></button>
       </div>
@@ -692,7 +728,7 @@
     <div class="home-col-left">
       <div class="logo"><canvas id="logoScreen" width="600" height="360"></canvas></div>
       <h1>小兔找萝卜</h1>
-      <p class="sub">牵着小白兔，穿过40关奇妙迷宫！</p>
+      <p class="sub">牵着小白兔，穿过50关奇妙大迷宫！</p>
       <button class="big-btn" id="btnStart">开始玩</button>
       <p class="start-hint" id="startHint">从第 1 关开始</p>
     </div>
@@ -701,14 +737,15 @@
       <div class="home-section">
         <div class="section-title">
           <span>选一关 <span class="section-hint" id="levelScrollHint"></span></span>
-          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/119</span></span>
+          <span class="star-total"><span class="star-glyph">★</span><span id="totalStars">0</span><span class="total-max" id="totalMaxStars">/149</span></span>
         </div>
         <div class="chapter-tabs" id="chapterTabs">
-          <button class="chapter-tab active" data-chap="all" type="button">全部 (40关)</button>
+          <button class="chapter-tab active" data-chap="all" type="button">全部 (50关)</button>
           <button class="chapter-tab" data-chap="1" type="button">🥕 1~10</button>
           <button class="chapter-tab" data-chap="2" type="button">🗝️ 11~20</button>
           <button class="chapter-tab" data-chap="3" type="button">⚔️ 21~30</button>
           <button class="chapter-tab" data-chap="4" type="button">👾 31~40</button>
+          <button class="chapter-tab" data-chap="5" type="button">🔥 41~50</button>
         </div>
         <div class="level-scroll" id="levelScroll">
           <div class="level-grid" id="levelGrid"></div>
@@ -750,6 +787,16 @@
     </div>
     <button class="big-btn" id="btnNext">下一关 <span>›</span></button>
     <button class="link-btn" id="btnWinHome">回主页</button>
+  </div>
+</div>
+
+<div id="failModal" class="overlay hidden">
+  <div class="card fail-card">
+    <div class="fail-emoji">🐰💫</div>
+    <h2>哎呀，没力气啦！</h2>
+    <p class="sub">怪兽好凶猛呀！别灰心，整理装备重新挑战吧~</p>
+    <button class="big-btn retry-btn" id="btnRetryLevel">🔄 重新挑战</button>
+    <button class="link-btn" id="btnFailHome">回主页</button>
   </div>
 </div>
 
@@ -974,6 +1021,18 @@ const Sound = (() => {
     monsterBump() {
       tone(220, 0.14, { type: 'sine', vol: 0.18, slide: 120 });
     },
+    bunnyHurt() {
+      // 小白兔受击短促惊吓声
+      tone(340, 0.12, { type: 'square', vol: 0.28, slide: 150 });
+      tone(480, 0.09, { type: 'triangle', vol: 0.24, when: 0.02, slide: 200 });
+    },
+    defeat() {
+      // 卡通滑稽滑落音效（鼓励再接再厉）
+      const failNotes = [440, 392, 349.23, 293.66];
+      failNotes.forEach((f, i) => {
+        tone(f, 0.28, { type: 'sine', vol: 0.22, when: i * 0.14, slide: f * 0.82 });
+      });
+    },
     treasureFanfare() {
       // 华丽盛大的宝藏开箱大和弦琶音
       const notes = [
@@ -1008,44 +1067,45 @@ const Sound = (() => {
    进度存档与贴纸奖励
    ========================================================= */
 const SAVE_KEY = 'migong.save.v1';
-const TOTAL_LEVELS = 40;
+const TOTAL_LEVELS = 50;
 
 const STAR_STICKERS = [
   { id: 'star_1',  need: 2,   emoji: '🦋', name: '小蝴蝶', category: 'star', desc: '集齐 2 颗星星收获的可爱小蝴蝶！', source: '⭐ 累计获得 2 颗星星' },
-  { id: 'star_2',  need: 8,   emoji: '🌸', name: '粉樱花', category: 'star', desc: '迷宫春日里迎风盛开的粉樱花！', source: '⭐ 累计获得 8 颗星星' },
-  { id: 'star_3',  need: 16,  emoji: '🍓', name: '甜草莓', category: 'star', desc: '红彤彤酸酸甜甜的美味草莓！', source: '⭐ 累计获得 16 颗星星' },
-  { id: 'star_4',  need: 26,  emoji: '🍀', name: '幸运草', category: 'star', desc: '带来满满幸运的四叶小草！', source: '⭐ 累计获得 26 颗星星' },
-  { id: 'star_5',  need: 38,  emoji: '🍄', name: '红蘑菇', category: 'star', desc: '小雨后从草地上冒出的红伞蘑菇！', source: '⭐ 累计获得 38 颗星星' },
-  { id: 'star_6',  need: 50,  emoji: '🎈', name: '彩气球', category: 'star', desc: '在迷宫蓝天中自由飘扬的彩色气球！', source: '⭐ 累计获得 50 颗星星' },
-  { id: 'star_7',  need: 64,  emoji: '🌈', name: '七彩虹', category: 'star', desc: '雨后挂在迷宫天边的梦幻彩虹！', source: '⭐ 累计获得 64 颗星星' },
-  { id: 'star_8',  need: 78,  emoji: '🧁', name: '纸杯蛋糕', category: 'star', desc: '香香甜甜、奶油蓬松的杯子蛋糕！', source: '⭐ 累计获得 78 颗星星' },
-  { id: 'star_9',  need: 92,  emoji: '🍭', name: '棒棒糖', category: 'star', desc: '色彩斑斓、甜进心坎的波浪棒棒糖！', source: '⭐ 累计获得 92 颗星星' },
-  { id: 'star_10', need: 102, emoji: '🌙', name: '弯弯月', category: 'star', desc: '宁静夜空里温柔发光的弯月亮！', source: '⭐ 累计获得 102 颗星星' },
-  { id: 'star_11', need: 112, emoji: '🚀', name: '小火箭', category: 'star', desc: '咻的一声冲破云霄的迷宫小火箭！', source: '⭐ 累计获得 112 颗星星' },
-  { id: 'star_12', need: 118, emoji: '👑', name: '金皇冠', category: 'star', desc: '送给集满几乎所有星星的迷宫小冠军！', source: '⭐ 累计获得 118 颗星星' },
+  { id: 'star_2',  need: 10,  emoji: '🌸', name: '粉樱花', category: 'star', desc: '迷宫春日里迎风盛开的粉樱花！', source: '⭐ 累计获得 10 颗星星' },
+  { id: 'star_3',  need: 22,  emoji: '🍓', name: '甜草莓', category: 'star', desc: '红彤彤酸酸甜甜的美味草莓！', source: '⭐ 累计获得 22 颗星星' },
+  { id: 'star_4',  need: 36,  emoji: '🍀', name: '幸运草', category: 'star', desc: '带来满满幸运的四叶小草！', source: '⭐ 累计获得 36 颗星星' },
+  { id: 'star_5',  need: 52,  emoji: '🍄', name: '红蘑菇', category: 'star', desc: '小雨后从草地上冒出的红伞蘑菇！', source: '⭐ 累计获得 52 颗星星' },
+  { id: 'star_6',  need: 70,  emoji: '🎈', name: '彩气球', category: 'star', desc: '在迷宫蓝天中自由飘扬的彩色气球！', source: '⭐ 累计获得 70 颗星星' },
+  { id: 'star_7',  need: 88,  emoji: '🌈', name: '七彩虹', category: 'star', desc: '雨后挂在迷宫天边的梦幻彩虹！', source: '⭐ 累计获得 88 颗星星' },
+  { id: 'star_8',  need: 106, emoji: '🧁', name: '纸杯蛋糕', category: 'star', desc: '香香甜甜、奶油蓬松的杯子蛋糕！', source: '⭐ 累计获得 106 颗星星' },
+  { id: 'star_9',  need: 120, emoji: '🍭', name: '棒棒糖', category: 'star', desc: '色彩斑斓、甜进心坎的波浪棒棒糖！', source: '⭐ 累计获得 120 颗星星' },
+  { id: 'star_10', need: 132, emoji: '🌙', name: '弯弯月', category: 'star', desc: '宁静夜空里温柔发光的弯月亮！', source: '⭐ 累计获得 132 颗星星' },
+  { id: 'star_11', need: 142, emoji: '🚀', name: '小火箭', category: 'star', desc: '咻的一声冲破云霄的迷宫小火箭！', source: '⭐ 累计获得 142 颗星星' },
+  { id: 'star_12', need: 148, emoji: '👑', name: '金皇冠', category: 'star', desc: '送给集满几乎所有星星的迷宫小冠军！', source: '⭐ 累计获得 148 颗星星' },
 ];
 
 const EXPLORE_STICKERS = [
   // 1~10关：小试身手篇
   { id: 'exp_1',  level: 2,  emoji: '🍯', name: '蜂蜜罐', category: 'explore', desc: '在第 2 关迷宫角落神秘宝箱中发现的香纯野蜂蜜！', source: '🎁 在第 2 关迷宫宝箱中发现' },
-  { id: 'exp_2',  level: 5,  emoji: '🌻', name: '向日葵', category: 'explore', desc: '在第 5 关迷宫支路发现的追随阳光的金色大向日葵！', source: '🎁 在第 5 关迷宫宝箱中发现' },
-  { id: 'exp_3',  level: 8,  emoji: '💎', name: '蓝宝石', category: 'explore', desc: '在第 8 关偏僻深处挖出的璀璨魔法蓝宝石！', source: '🎁 在第 8 关迷宫宝箱中发现' },
+  { id: 'exp_2',  level: 6,  emoji: '🌻', name: '向日葵', category: 'explore', desc: '在第 6 关迷宫支路发现的追随阳光的金色大向日葵！', source: '🎁 在第 6 关迷宫宝箱中发现' },
+  { id: 'exp_3',  level: 10, emoji: '💎', name: '蓝宝石', category: 'explore', desc: '在第 10 关偏僻深处挖出的璀璨魔法蓝宝石！', source: '🎁 在第 10 关迷宫宝箱中发现' },
   // 11~20关：密室寻匙篇
-  { id: 'exp_4',  level: 11, emoji: '🧭', name: '探险罗盘', category: 'explore', desc: '在第 11 关密室盲端中拾取的金色方向罗盘！', source: '🎁 在第 11 关迷宫宝箱中发现' },
-  { id: 'exp_5',  level: 14, emoji: '🗝️', name: '古铜秘钥', category: 'explore', desc: '在第 14 关密室角落找到的刻有神秘铭文的古老钥匙！', source: '🎁 在第 14 关迷宫宝箱中发现' },
-  { id: 'exp_6',  level: 17, emoji: '📜', name: '藏宝图', category: 'explore', desc: '在第 17 关宝箱中发现的羊皮纸迷宫藏宝图！', source: '🎁 在第 17 关迷宫宝箱中发现' },
-  { id: 'exp_7',  level: 20, emoji: '🏮', name: '魔法提灯', category: 'explore', desc: '在第 20 关密室深处发现的驱散黑暗的暖光提灯！', source: '🎁 在第 20 关迷宫宝箱中发现' },
+  { id: 'exp_4',  level: 13, emoji: '🧭', name: '探险罗盘', category: 'explore', desc: '在第 13 关密室盲端中拾取的金色方向罗盘！', source: '🎁 在第 13 关迷宫宝箱中发现' },
+  { id: 'exp_5',  level: 16, emoji: '🗝️', name: '古铜秘钥', category: 'explore', desc: '在第 16 关密室角落找到的刻有神秘铭文的古老钥匙！', source: '🎁 在第 16 关迷宫宝箱中发现' },
+  { id: 'exp_6',  level: 20, emoji: '📜', name: '藏宝图', category: 'explore', desc: '在第 20 关宝箱中发现的羊皮纸迷宫藏宝图！', source: '🎁 在第 20 关迷宫宝箱中发现' },
   // 21~30关：勇士大冒险篇
-  { id: 'exp_8',  level: 23, emoji: '🔮', name: '占卜水晶', category: 'explore', desc: '在第 23 关怪兽洞穴尽头发现的能看穿宝藏的纯净水晶球！', source: '🎁 在第 23 关迷宫宝箱中发现' },
-  { id: 'exp_9',  level: 26, emoji: '🛡️', name: '勇气圆盾', category: 'explore', desc: '在第 26 关怪兽迷宫中找到的守护小兔的纯银圆盾！', source: '🎁 在第 26 关迷宫宝箱中发现' },
-  { id: 'exp_10', level: 29, emoji: '⚔️', name: '圣光之剑', category: 'explore', desc: '在第 29 关怪兽洞穴中拔出的闪烁蓝白光芒的传说小剑！', source: '🎁 在第 29 关迷宫宝箱中发现' },
-  // 31~40关：巡逻大挑战篇（全新篇章！）
-  { id: 'exp_11', level: 34, emoji: '🏅', name: '勇士勋章', category: 'explore', desc: '在第 34 关巡逻怪兽环绕的神秘宝箱中获得的勇士勋章！', source: '🎁 在第 34 关迷宫宝箱中发现' },
-  { id: 'exp_12', level: 40, emoji: '🏆', name: '终极金杯', category: 'explore', desc: '在第 40 关终极巡逻大迷宫宝箱中获得的至高无上胜利金杯！', source: '🎁 在第 40 关迷宫宝箱中发现' },
+  { id: 'exp_7',  level: 23, emoji: '🏮', name: '魔法提灯', category: 'explore', desc: '在第 23 关怪兽迷宫深处发现的驱散黑暗的暖光提灯！', source: '🎁 在第 23 关迷宫宝箱中发现' },
+  { id: 'exp_8',  level: 27, emoji: '🔮', name: '占卜水晶', category: 'explore', desc: '在第 27 关怪兽洞穴尽头发现的能看穿宝藏的纯净水晶球！', source: '🎁 在第 27 关迷宫宝箱中发现' },
+  { id: 'exp_9',  level: 30, emoji: '🛡️', name: '勇气圆盾', category: 'explore', desc: '在第 30 关怪兽要塞中找到的守护小兔的纯银圆盾！', source: '🎁 在第 30 关迷宫宝箱中发现' },
+  // 31~40关：巡逻大挑战篇
+  { id: 'exp_10', level: 35, emoji: '⚔️', name: '圣光之剑', category: 'explore', desc: '在第 35 关巡逻怪兽长廊拔出的闪烁圣光的传说小剑！', source: '🎁 在第 35 关迷宫宝箱中发现' },
+  { id: 'exp_11', level: 40, emoji: '🏅', name: '勇士勋章', category: 'explore', desc: '在第 40 关巡逻迷宫深处获得的最高勇士勋章！', source: '🎁 在第 40 关迷宫宝箱中发现' },
+  // 41~50关：勇者大决战篇（新增压轴篇章！）
+  { id: 'exp_12', level: 50, emoji: '🏆', name: '终极金杯', category: 'explore', desc: '在第 50 关终极决战大迷宫宝箱中获得的至高无上胜利金杯！', source: '🎁 在第 50 关迷宫宝箱中发现' },
 ];
 
 const ALL_STICKERS = [...STAR_STICKERS, ...EXPLORE_STICKERS];
-const MAX_STARS = 119;
+const MAX_STARS = 149;
 
 function levelStarCount(n) {
   return n === 1 ? 2 : 3;
@@ -1070,8 +1130,10 @@ function loadSave() {
         if (Number.isFinite(bank)) out.starBank = clamp(Math.round(bank), 0, 9999);
         const cur = Number(data.current);
         if (Number.isFinite(cur)) out.current = clamp(Math.round(cur), 1, TOTAL_LEVELS);
-        // 老存档平滑过渡：若已通关第30关，自动推进至第31关巡逻大挑战
-        if (out.best[30] !== undefined && out.current <= 30) {
+        // 老存档平滑过渡：若已通关第40关，自动推进至第41关勇者大决战
+        if (out.best[40] !== undefined && out.current <= 40) {
+          out.current = 41;
+        } else if (out.best[30] !== undefined && out.current <= 30) {
           out.current = 31;
         }
         if (Array.isArray(data.foundStickers)) {
@@ -1116,7 +1178,7 @@ const state = {
   sword: { attacking: false, attackT: 0, cooldown: 0 },
   doorPrompt: { text: '', until: 0 },
   stickerTab: 'star',              // star | explore
-  bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0 },
+  bunny: { x: 1.5, y: 1.5, vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0, hp: 3, maxHp: 3, invulnT: 0 },
   pointer: {
     down: false, x: 0, y: 0, id: null,
     sx: 0, sy: 0, cx: 0, cy: 0,
@@ -1217,6 +1279,17 @@ const LEVEL_CONF = {
   38: { rooms: [8, 7], braid: 0.14, loops: 2 },
   39: { rooms: [8, 7], braid: 0.12, loops: 2 },
   40: { rooms: [8, 7], braid: 0.12, loops: 2 },
+  // 41~50关：勇者大决战（主动追击攻击小兔的凶暴怪兽，生命值考验）
+  41: { rooms: [7, 6], braid: 0.22, loops: 2 },
+  42: { rooms: [7, 6], braid: 0.22, loops: 2 },
+  43: { rooms: [8, 6], braid: 0.20, loops: 2 },
+  44: { rooms: [8, 6], braid: 0.20, loops: 2 },
+  45: { rooms: [8, 6], braid: 0.18, loops: 2 },
+  46: { rooms: [8, 7], braid: 0.18, loops: 2 },
+  47: { rooms: [8, 7], braid: 0.16, loops: 2 },
+  48: { rooms: [8, 7], braid: 0.16, loops: 2 },
+  49: { rooms: [9, 7], braid: 0.15, loops: 3 },
+  50: { rooms: [9, 7], braid: 0.15, loops: 3 },
 };
 
 function generateMaze(roomsW, roomsH, braidChance, loopCount, rand) {
@@ -1521,7 +1594,9 @@ function setupKeyAndDoor(grid, cols, rows, start, goal, rand) {
 }
 
 function setupMonsters(grid, cols, rows, start, goal, rand) {
-  const count = Math.min(4, Math.max(2, Math.floor(2 + (state.level - 21) * 0.35)));
+  const count = state.level > 40
+    ? Math.min(5, Math.max(3, Math.floor(3 + (state.level - 40) * 0.25)))
+    : Math.min(4, Math.max(2, Math.floor(2 + (state.level - 21) * 0.35)));
   const cands = [];
   for (let r = 1; r < rows - 1; r++) {
     for (let c = 1; c < cols - 1; c++) {
@@ -1542,6 +1617,7 @@ function setupMonsters(grid, cols, rows, start, goal, rand) {
     }
   }
   const isPatrolLevel = state.level > 30;
+  const isAggressive = state.level > 40;
   state.monsters = chosen.map(m => {
     let dir = [1, 0];
     if (isPatrolLevel) {
@@ -1564,8 +1640,11 @@ function setupMonsters(grid, cols, rows, start, goal, rand) {
       hitT: 0,
       bobPhase: rand() * TAU,
       moving: isPatrolLevel,
+      aggressive: isAggressive,
+      alert: false,
+      alertT: 0,
       dir,
-      speed: 0.75, // 温和巡逻速度（格/秒），约为小兔的 1/4
+      speed: isAggressive ? 0.82 : 0.75, // 凶暴小怪常态巡逻略快
       pauseT: 0,
       walkT: 0,
     };
@@ -1664,6 +1743,7 @@ function startLevel(n) {
   state.bunny = {
     x: start.c + 0.5, y: start.r + 0.5,
     vx: 0, vy: 0, face: 1, walkT: 0, bumpT: 0,
+    hp: 3, maxHp: 3, invulnT: 0,
   };
   resetPointer();
   resetJoypad();
@@ -2063,6 +2143,9 @@ function drawBunnyArt(g, x, y, s, t, opts = {}) {
   const squash = bump > 0 ? Math.sin((bump / 0.18) * Math.PI) * 0.065 : 0;
 
   g.save();
+  if (opts.invuln && Math.sin(t * 30) > 0) {
+    g.globalAlpha = 0.38;
+  }
   g.translate(x, y + s * 0.04);
 
   // 影子
@@ -2593,12 +2676,16 @@ function drawDoorArt(g, x, y, s, t, door) {
 
 function drawMonsterArt(g, x, y, s, t, m) {
   g.save();
-  const bobSpeed = m.moving ? 7.5 : 3.2;
+  const isAggressive = !!m.aggressive;
+  const bobSpeed = m.alert ? 12 : (m.moving ? 7.5 : 3.2);
   const bob = Math.sin(t * bobSpeed + m.bobPhase) * s * (m.moving ? 0.08 : 0.06);
   g.translate(x, y + bob);
   if (m.moving && m.alive) {
-    const squish = Math.sin(t * bobSpeed + m.bobPhase) * 0.06;
+    const squish = Math.sin(t * bobSpeed + m.bobPhase) * (m.alert ? 0.09 : 0.06);
     g.scale(1 + squish, 1 - squish);
+  }
+  if (m.alert && m.alive) {
+    g.scale(1.08, 1.08);
   }
 
   // 受击消散动画
@@ -2613,24 +2700,46 @@ function drawMonsterArt(g, x, y, s, t, m) {
   }
 
   // 地面投影
-  g.fillStyle = 'rgba(20, 45, 60, 0.22)';
+  g.fillStyle = isAggressive ? 'rgba(70, 15, 15, 0.26)' : 'rgba(20, 45, 60, 0.22)';
   g.beginPath();
   g.ellipse(0, s * 0.34 - bob * 0.6, s * 0.28, s * 0.09, 0, 0, TAU);
   g.fill();
 
   const r = s * 0.32;
 
-  // 天蓝色圆滚滚身体（参考图主色调）
+  // 凶暴角怪的头顶小恶魔角（41~50关攻击怪兽专属）
+  if (isAggressive && m.alive) {
+    g.fillStyle = '#ffc83b';
+    g.strokeStyle = '#7a1406';
+    g.lineWidth = Math.max(1, s * 0.018);
+    for (const hx of [-r * 0.46, r * 0.46]) {
+      g.beginPath();
+      g.moveTo(hx - 3, -r * 0.7);
+      g.quadraticCurveTo(hx * 1.3, -r * 1.35, hx * 1.5, -r * 1.3);
+      g.quadraticCurveTo(hx * 1.1, -r * 0.9, hx + 3, -r * 0.7);
+      g.closePath();
+      g.fill();
+      g.stroke();
+    }
+  }
+
+  // 身体主色调（普通关卡天蓝色，41~50关攻击怪兽为炽烈熔岩红）
   const skin = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
-  skin.addColorStop(0, '#58d1f8');
-  skin.addColorStop(0.7, '#38b2dc');
-  skin.addColorStop(1, '#258ea2');
+  if (isAggressive) {
+    skin.addColorStop(0, '#ff735c');
+    skin.addColorStop(0.65, '#dc2626');
+    skin.addColorStop(1, '#881313');
+  } else {
+    skin.addColorStop(0, '#58d1f8');
+    skin.addColorStop(0.7, '#38b2dc');
+    skin.addColorStop(1, '#258ea2');
+  }
   g.fillStyle = skin;
   g.beginPath();
   g.arc(0, 0, r, 0, TAU);
   g.fill();
 
-  // 上方一对大眼睛（白底 + 黑瞳孔 + 双高光，朝上方看，萌度拉满）
+  // 上方一对大眼睛
   const eyeR = r * 0.28;
   const eyeY = -r * 0.22;
   const eyeSpacing = r * 0.30;
@@ -2641,11 +2750,11 @@ function drawMonsterArt(g, x, y, s, t, m) {
     g.beginPath();
     g.arc(ex, eyeY, eyeR, 0, TAU);
     g.fill();
-    g.strokeStyle = '#1b5e73';
+    g.strokeStyle = isAggressive ? '#610e0e' : '#1b5e73';
     g.lineWidth = Math.max(1, s * 0.018);
     g.stroke();
 
-    g.fillStyle = '#1c2938';
+    g.fillStyle = isAggressive ? '#260404' : '#1c2938';
     g.beginPath();
     g.arc(ex + dir * 0.5, eyeY - eyeR * 0.25, eyeR * 0.55, 0, TAU);
     g.fill();
@@ -2657,12 +2766,12 @@ function drawMonsterArt(g, x, y, s, t, m) {
     g.fill();
   }
 
-  // 下方标志性大嘴巴与两排白色尖锐锯齿牙齿（完全对齐截图！）
+  // 下方标志性大嘴巴与两排白色尖锐锯齿牙齿
   const mouthY = r * 0.32;
   const mouthW = r * 1.35;
   const mouthH = r * 0.42;
 
-  g.fillStyle = '#1b556b';
+  g.fillStyle = isAggressive ? '#450808' : '#1b556b';
   g.beginPath();
   g.ellipse(0, mouthY, mouthW / 2, mouthH / 2, 0, 0, TAU);
   g.fill();
@@ -2689,6 +2798,17 @@ function drawMonsterArt(g, x, y, s, t, m) {
   }
   g.closePath();
   g.fill();
+
+  // 警觉追击状态下的头顶怒火气愤小怒符「💢」
+  if (m.alert && m.alive) {
+    g.save();
+    g.translate(0, -r * 1.38 + Math.sin(t * 14) * s * 0.04);
+    g.font = `bold ${Math.max(14, s * 0.32)}px sans-serif`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText('💢', 0, 0);
+    g.restore();
+  }
 
   g.restore();
 }
@@ -3540,6 +3660,7 @@ function update(dt) {
       if (Math.abs(b.vx) > 0.35) b.face = b.vx > 0 ? 1 : -1;
     }
     if (b.bumpT > 0) b.bumpT = Math.max(0, b.bumpT - dt);
+    if (b.invulnT > 0) b.invulnT = Math.max(0, b.invulnT - dt);
 
     moveAndCollide(dt, now);
     checkCollect();
@@ -3568,7 +3689,7 @@ function update(dt) {
       }
     }
 
-    // 怪兽巡逻移动与碰撞处理（30关之后开启巡逻活动）
+    // 怪兽巡逻移动、追击与碰撞处理（31+关巡逻，41+关凶暴攻击）
     if (state.monsters && state.monsters.length) {
       for (const m of state.monsters) {
         if (!m.alive) {
@@ -3576,14 +3697,67 @@ function update(dt) {
           continue;
         }
 
-        // 31~40关活动怪兽巡逻推进
+        // 41~50关凶暴怪兽视线索敌与主动攻击冲锋
+        if (m.aggressive && m.alive) {
+          const dxToB = b.x - m.x;
+          const dyToB = b.y - m.y;
+          const distToB = Math.hypot(dxToB, dyToB);
+          let seeBunny = false;
+
+          if (distToB <= 3.8) {
+            if (Math.abs(dyToB) < 0.45) {
+              const r = Math.round(m.y);
+              const minC = Math.min(Math.round(m.x), Math.round(b.x));
+              const maxC = Math.max(Math.round(m.x), Math.round(b.x));
+              let clear = true;
+              for (let c = minC; c <= maxC; c++) {
+                if (state.grid[r]?.[c] === 1 || (state.door && !state.door.open && state.door.c === c && state.door.r === r)) {
+                  clear = false; break;
+                }
+              }
+              if (clear) {
+                seeBunny = true;
+                m.dir = [Math.sign(dxToB) || 1, 0];
+              }
+            } else if (Math.abs(dxToB) < 0.45) {
+              const c = Math.round(m.x);
+              const minR = Math.min(Math.round(m.y), Math.round(b.y));
+              const maxR = Math.max(Math.round(m.y), Math.round(b.y));
+              let clear = true;
+              for (let r = minR; r <= maxR; r++) {
+                if (state.grid[r]?.[c] === 1 || (state.door && !state.door.open && state.door.c === c && state.door.r === r)) {
+                  clear = false; break;
+                }
+              }
+              if (clear) {
+                seeBunny = true;
+                m.dir = [0, Math.sign(dyToB) || 1];
+              }
+            }
+          }
+
+          if (seeBunny) {
+            m.alert = true;
+            m.alertT = 1.6;
+            m.speed = 1.35;
+          } else if (m.alertT > 0) {
+            m.alertT = Math.max(0, m.alertT - dt);
+            if (m.alertT === 0) {
+              m.alert = false;
+              m.speed = 0.82;
+            }
+          }
+        }
+
+        // 活动怪兽移动推进
         if (m.moving) {
           m.walkT = (m.walkT || 0) + dt;
           if (m.pauseT > 0) {
             m.pauseT = Math.max(0, m.pauseT - dt);
           } else {
-            const nextX = m.x + m.dir[0] * m.speed * dt;
-            const nextY = m.y + m.dir[1] * m.speed * dt;
+            const curSpd = m.alert ? (m.speed || 1.35) : (m.speed || 0.75);
+            const nextX = m.x + m.dir[0] * curSpd * dt;
+            const nextY = m.y + m.dir[1] * curSpd * dt;
 
             // 前方探针检测（0.46 格距离）
             const probeX = nextX + m.dir[0] * 0.46;
@@ -3601,10 +3775,11 @@ function update(dt) {
             }
 
             if (blocked) {
-              // 遇到障碍墙壁或闭门：调转方向，稍作迟滞转向
               m.dir[0] = -m.dir[0];
               m.dir[1] = -m.dir[1];
               m.pauseT = 0.2;
+              m.alert = false;
+              m.speed = m.aggressive ? 0.82 : 0.75;
             } else {
               m.x = nextX;
               m.y = nextY;
@@ -3614,21 +3789,43 @@ function update(dt) {
           }
         }
 
-        // 碰撞怪兽弹开（防挫败机制）
+        // 碰撞怪兽判定
         const dx = b.x - m.x;
         const dy = b.y - m.y;
         const d = Math.hypot(dx, dy);
-        if (d < 0.62) {
-          const pushX = (dx / (d || 1)) * 3.2;
-          const pushY = (dy / (d || 1)) * 3.2;
+        if (d < 0.68) {
+          const pushX = (dx / (d || 1)) * 3.6;
+          const pushY = (dy / (d || 1)) * 3.6;
           b.vx = pushX;
           b.vy = pushY;
-          b.bumpT = 0.24;
-          Sound.monsterBump();
+          b.bumpT = 0.32;
+
+          if (m.aggressive) {
+            if ((b.invulnT || 0) <= 0) {
+              b.invulnT = 1.2;
+              state.hp = Math.max(0, (state.hp ?? 3) - 1);
+              Sound.bunnyHurt();
+              updateHpHud();
+              const hpPill = $('hpPill');
+              if (hpPill) {
+                hpPill.classList.remove('shake');
+                void hpPill.offsetWidth;
+                hpPill.classList.add('shake');
+              }
+              if (state.hp <= 0) {
+                doGameOver();
+                break;
+              }
+            }
+          } else {
+            Sound.monsterBump();
+          }
+
           if (m.moving) {
             m.dir[0] = -m.dir[0];
             m.dir[1] = -m.dir[1];
-            m.pauseT = 0.45;
+            m.pauseT = 0.55;
+            m.alert = false;
           }
           break;
         }
@@ -3772,6 +3969,7 @@ function render(t) {
       blink,
       happy: state.phase === 'win',
       bump: b.bumpT,
+      invuln: (b.invulnT || 0) > 0,
     };
 
     if (state.level >= 21) {
@@ -3991,7 +4189,64 @@ function chapterInfo(n) {
   if (n <= 10) return { title: '小试身手', badge: '🥕' };
   if (n <= 20) return { title: '密室寻匙', badge: '🗝️' };
   if (n <= 30) return { title: '勇士大冒险', badge: '⚔️' };
-  return { title: '巡逻大挑战', badge: '👾' };
+  if (n <= 40) return { title: '巡逻大挑战', badge: '👾' };
+  return { title: '勇者大决战', badge: '🔥' };
+}
+
+function updateHpHud() {
+  const pill = $('hpPill');
+  const icons = $('hpIcons');
+  if (!pill || !icons) return;
+  if (state.level <= 40) {
+    pill.classList.add('hidden');
+    return;
+  }
+  pill.classList.remove('hidden');
+  const hp = clamp(state.hp ?? 3, 0, 3);
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    html += i < hp ? '❤️' : '🖤';
+  }
+  icons.textContent = html;
+}
+
+function doGameOver() {
+  if (state.phase !== 'play') return;
+  state.phase = 'fail';
+  state.bunny.vx = 0;
+  state.bunny.vy = 0;
+  Sound.defeat();
+
+  const { cell, ox, oy } = state.layout;
+  const bx = ox + state.bunny.x * cell;
+  const by = oy + state.bunny.y * cell;
+  for (let i = 0; i < 8; i++) {
+    state.particles.push({
+      x: bx, y: by - cell * 0.3,
+      vx: (Math.random() - 0.5) * 60,
+      vy: -30 - Math.random() * 50,
+      g: 120, drag: 1.2,
+      size: Math.max(4, cell * 0.08),
+      color: '#ffd65c',
+      kind: 'star',
+      rot: 0, vr: 6,
+      life: 0.9, t: 0
+    });
+  }
+
+  setTimeout(() => {
+    if (state.phase === 'fail') {
+      const failModal = $('failModal');
+      if (failModal) failModal.classList.remove('hidden');
+    }
+  }, 450);
+}
+
+function retryCurrentLevel() {
+  Sound.click();
+  const failModal = $('failModal');
+  if (failModal) failModal.classList.add('hidden');
+  startLevel(state.level);
 }
 
 function updateKeyHud() {
@@ -4027,6 +4282,7 @@ function rebuildHud() {
     wrap.appendChild(el);
   }
   updateKeyHud();
+  updateHpHud();
   const btnAttack = $('btnAttack');
   if (btnAttack) {
     if (state.level >= 21) {
@@ -4171,8 +4427,11 @@ function renderHome() {
   } else if (state.chapterTab === '4') {
     startIdx = 31; endIdx = 40;
     $('levelScrollHint').textContent = '· 👾巡逻大挑战 (31~40关)';
+  } else if (state.chapterTab === '5') {
+    startIdx = 41; endIdx = 50;
+    $('levelScrollHint').textContent = '· 🔥勇者大决战 (41~50关)';
   } else {
-    $('levelScrollHint').textContent = '· 全40关大冒险';
+    $('levelScrollHint').textContent = '· 全50关大冒险';
   }
 
   const grid = $('levelGrid');
@@ -4529,6 +4788,18 @@ if (giftRevealModal) {
   });
 }
 
+// 失败弹窗事件绑定
+if ($('btnRetryLevel')) $('btnRetryLevel').addEventListener('click', () => {
+  Sound.click();
+  retryCurrentLevel();
+});
+if ($('btnFailHome')) $('btnFailHome').addEventListener('click', () => {
+  Sound.click();
+  const failModal = $('failModal');
+  if (failModal) failModal.classList.add('hidden');
+  goHome();
+});
+
 if ($('btnSound')) $('btnSound').addEventListener('click', toggleSound);
 if ($('btnHomeSound')) $('btnHomeSound').addEventListener('click', toggleSound);
 if ($('btnRotate')) $('btnRotate').addEventListener('click', toggleRotate);
@@ -4731,6 +5002,10 @@ window.__migong = {
   startLevel,
   heroAttack,
   win: doWin,
+  doGameOver,
+  retryCurrentLevel,
+  updateHpHud,
+  TOTAL_LEVELS,
   toggleRotate,
   showInGameStickerReveal,
   closeInGameStickerReveal,
