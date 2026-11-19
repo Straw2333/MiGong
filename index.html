@@ -833,9 +833,13 @@ const Sound = (() => {
       tone(440, 0.08, { type: 'triangle', vol: 0.20, when: 0.02, slide: 120 });
     },
     monsterDefeat() {
-      tone(440, 0.09, { type: 'sine', vol: 0.22, slide: 880 });
-      tone(1046.5, 0.15, { type: 'triangle', vol: 0.24, when: 0.05 });
-      tone(1567.98, 0.24, { type: 'sine', vol: 0.20, when: 0.10 });
+      // 1. 扎实有力的卡通重击打击声（Impact Punch）
+      tone(150, 0.12, { type: 'square', vol: 0.32, slide: 45 });
+      tone(260, 0.08, { type: 'triangle', vol: 0.28, when: 0.01, slide: 75 });
+      // 2. 华丽解压的星光消散升阶音（Sparkle Dissolve）
+      tone(783.99, 0.14, { type: 'sine', vol: 0.28, when: 0.04 });
+      tone(1174.66, 0.18, { type: 'triangle', vol: 0.26, when: 0.08 });
+      tone(1760.00, 0.24, { type: 'sine', vol: 0.22, when: 0.13, slide: 2093 });
     },
     monsterBump() {
       tone(220, 0.14, { type: 'sine', vol: 0.18, slide: 120 });
@@ -860,21 +864,21 @@ const Sound = (() => {
    进度存档与贴纸奖励
    ========================================================= */
 const SAVE_KEY = 'migong.save.v1';
-const TOTAL_LEVELS = 30;
+const TOTAL_LEVELS = 40;
 
 const STAR_STICKERS = [
-  { id: 'star_1',  need: 2,  emoji: '🦋', name: '小蝴蝶', category: 'star', desc: '集齐 2 颗星星收获的可爱小蝴蝶！', source: '⭐ 累计获得 2 颗星星' },
-  { id: 'star_2',  need: 6,  emoji: '🌸', name: '粉樱花', category: 'star', desc: '迷宫春日里迎风盛开的粉樱花！', source: '⭐ 累计获得 6 颗星星' },
-  { id: 'star_3',  need: 12, emoji: '🍓', name: '甜草莓', category: 'star', desc: '红彤彤酸酸甜甜的美味草莓！', source: '⭐ 累计获得 12 颗星星' },
-  { id: 'star_4',  need: 18, emoji: '🍀', name: '幸运草', category: 'star', desc: '带来满满幸运的四叶小草！', source: '⭐ 累计获得 18 颗星星' },
-  { id: 'star_5',  need: 25, emoji: '🍄', name: '红蘑菇', category: 'star', desc: '小雨后从草地上冒出的红伞蘑菇！', source: '⭐ 累计获得 25 颗星星' },
-  { id: 'star_6',  need: 34, emoji: '🎈', name: '彩气球', category: 'star', desc: '在迷宫蓝天中自由飘扬的彩色气球！', source: '⭐ 累计获得 34 颗星星' },
-  { id: 'star_7',  need: 44, emoji: '🌈', name: '七彩虹', category: 'star', desc: '雨后挂在迷宫天边的梦幻彩虹！', source: '⭐ 累计获得 44 颗星星' },
-  { id: 'star_8',  need: 54, emoji: '🧁', name: '纸杯蛋糕', category: 'star', desc: '香香甜甜、奶油蓬松的杯子蛋糕！', source: '⭐ 累计获得 54 颗星星' },
-  { id: 'star_9',  need: 64, emoji: '🍭', name: '棒棒糖', category: 'star', desc: '色彩斑斓、甜进心坎的波浪棒棒糖！', source: '⭐ 累计获得 64 颗星星' },
-  { id: 'star_10', need: 74, emoji: '🌙', name: '弯弯月', category: 'star', desc: '宁静夜空里温柔发光的弯月亮！', source: '⭐ 累计获得 74 颗星星' },
-  { id: 'star_11', need: 82, emoji: '🚀', name: '小火箭', category: 'star', desc: '咻的一声冲破云霄的迷宫小火箭！', source: '⭐ 累计获得 82 颗星星' },
-  { id: 'star_12', need: 88, emoji: '👑', name: '金皇冠', category: 'star', desc: '送给集满几乎所有星星的迷宫小冠军！', source: '⭐ 累计获得 88 颗星星' },
+  { id: 'star_1',  need: 2,   emoji: '🦋', name: '小蝴蝶', category: 'star', desc: '集齐 2 颗星星收获的可爱小蝴蝶！', source: '⭐ 累计获得 2 颗星星' },
+  { id: 'star_2',  need: 8,   emoji: '🌸', name: '粉樱花', category: 'star', desc: '迷宫春日里迎风盛开的粉樱花！', source: '⭐ 累计获得 8 颗星星' },
+  { id: 'star_3',  need: 16,  emoji: '🍓', name: '甜草莓', category: 'star', desc: '红彤彤酸酸甜甜的美味草莓！', source: '⭐ 累计获得 16 颗星星' },
+  { id: 'star_4',  need: 26,  emoji: '🍀', name: '幸运草', category: 'star', desc: '带来满满幸运的四叶小草！', source: '⭐ 累计获得 26 颗星星' },
+  { id: 'star_5',  need: 38,  emoji: '🍄', name: '红蘑菇', category: 'star', desc: '小雨后从草地上冒出的红伞蘑菇！', source: '⭐ 累计获得 38 颗星星' },
+  { id: 'star_6',  need: 50,  emoji: '🎈', name: '彩气球', category: 'star', desc: '在迷宫蓝天中自由飘扬的彩色气球！', source: '⭐ 累计获得 50 颗星星' },
+  { id: 'star_7',  need: 64,  emoji: '🌈', name: '七彩虹', category: 'star', desc: '雨后挂在迷宫天边的梦幻彩虹！', source: '⭐ 累计获得 64 颗星星' },
+  { id: 'star_8',  need: 78,  emoji: '🧁', name: '纸杯蛋糕', category: 'star', desc: '香香甜甜、奶油蓬松的杯子蛋糕！', source: '⭐ 累计获得 78 颗星星' },
+  { id: 'star_9',  need: 92,  emoji: '🍭', name: '棒棒糖', category: 'star', desc: '色彩斑斓、甜进心坎的波浪棒棒糖！', source: '⭐ 累计获得 92 颗星星' },
+  { id: 'star_10', need: 102, emoji: '🌙', name: '弯弯月', category: 'star', desc: '宁静夜空里温柔发光的弯月亮！', source: '⭐ 累计获得 102 颗星星' },
+  { id: 'star_11', need: 112, emoji: '🚀', name: '小火箭', category: 'star', desc: '咻的一声冲破云霄的迷宫小火箭！', source: '⭐ 累计获得 112 颗星星' },
+  { id: 'star_12', need: 118, emoji: '👑', name: '金皇冠', category: 'star', desc: '送给集满几乎所有星星的迷宫小冠军！', source: '⭐ 累计获得 118 颗星星' },
 ];
 
 const EXPLORE_STICKERS = [
@@ -893,7 +897,7 @@ const EXPLORE_STICKERS = [
 ];
 
 const ALL_STICKERS = [...STAR_STICKERS, ...EXPLORE_STICKERS];
-const MAX_STARS = 88;
+const MAX_STARS = 119;
 
 function levelStarCount(n) {
   return n === 1 ? 2 : 3;
@@ -1050,6 +1054,17 @@ const LEVEL_CONF = {
   28: { rooms: [8, 6], braid: 0.08, loops: 0 },
   29: { rooms: [8, 6], braid: 0.08, loops: 0 },
   30: { rooms: [8, 6], braid: 0.08, loops: 0 },
+  // 31~40关：巡逻大挑战（会走动的小怪兽，通道巡逻与时机战斗）
+  31: { rooms: [7, 5], braid: 0.20, loops: 1 },
+  32: { rooms: [7, 5], braid: 0.20, loops: 1 },
+  33: { rooms: [7, 6], braid: 0.18, loops: 1 },
+  34: { rooms: [7, 6], braid: 0.18, loops: 1 },
+  35: { rooms: [8, 6], braid: 0.16, loops: 2 },
+  36: { rooms: [8, 6], braid: 0.16, loops: 2 },
+  37: { rooms: [8, 6], braid: 0.14, loops: 2 },
+  38: { rooms: [8, 7], braid: 0.14, loops: 2 },
+  39: { rooms: [8, 7], braid: 0.12, loops: 2 },
+  40: { rooms: [8, 7], braid: 0.12, loops: 2 },
 };
 
 function generateMaze(roomsW, roomsH, braidChance, loopCount, rand) {
@@ -1374,15 +1389,35 @@ function setupMonsters(grid, cols, rows, start, goal, rand) {
       if (chosen.length >= count) break;
     }
   }
-  state.monsters = chosen.map(m => ({
-    c: m.c,
-    r: m.r,
-    x: m.c + 0.5,
-    y: m.r + 0.5,
-    alive: true,
-    hitT: 0,
-    bobPhase: rand() * TAU,
-  }));
+  const isPatrolLevel = state.level > 30;
+  state.monsters = chosen.map(m => {
+    let dir = [1, 0];
+    if (isPatrolLevel) {
+      const hOpen = (grid[m.r]?.[m.c - 1] === 0 ? 1 : 0) + (grid[m.r]?.[m.c + 1] === 0 ? 1 : 0);
+      const vOpen = (grid[m.r - 1]?.[m.c] === 0 ? 1 : 0) + (grid[m.r + 1]?.[m.c] === 0 ? 1 : 0);
+      if (vOpen > hOpen) {
+        dir = [0, 1];
+      } else if (hOpen > vOpen) {
+        dir = [1, 0];
+      } else {
+        dir = rand() < 0.5 ? [1, 0] : [0, 1];
+      }
+    }
+    return {
+      c: m.c,
+      r: m.r,
+      x: m.c + 0.5,
+      y: m.r + 0.5,
+      alive: true,
+      hitT: 0,
+      bobPhase: rand() * TAU,
+      moving: isPatrolLevel,
+      dir,
+      speed: 0.75, // 温和巡逻速度（格/秒），约为小兔的 1/4
+      pauseT: 0,
+      walkT: 0,
+    };
+  });
 }
 
 /* =========================================================
@@ -2406,8 +2441,13 @@ function drawDoorArt(g, x, y, s, t, door) {
 
 function drawMonsterArt(g, x, y, s, t, m) {
   g.save();
-  const bob = Math.sin(t * 3.2 + m.bobPhase) * s * 0.06;
+  const bobSpeed = m.moving ? 7.5 : 3.2;
+  const bob = Math.sin(t * bobSpeed + m.bobPhase) * s * (m.moving ? 0.08 : 0.06);
   g.translate(x, y + bob);
+  if (m.moving && m.alive) {
+    const squish = Math.sin(t * bobSpeed + m.bobPhase) * 0.06;
+    g.scale(1 + squish, 1 - squish);
+  }
 
   // 受击消散动画
   if (!m.alive) {
@@ -3314,13 +3354,53 @@ function update(dt) {
       }
     }
 
-    // 碰撞怪兽弹开（防挫败机制）
+    // 怪兽巡逻移动与碰撞处理（30关之后开启巡逻活动）
     if (state.monsters && state.monsters.length) {
       for (const m of state.monsters) {
         if (!m.alive) {
           if (m.hitT > 0) m.hitT = Math.max(0, m.hitT - dt);
           continue;
         }
+
+        // 31~40关活动怪兽巡逻推进
+        if (m.moving) {
+          m.walkT = (m.walkT || 0) + dt;
+          if (m.pauseT > 0) {
+            m.pauseT = Math.max(0, m.pauseT - dt);
+          } else {
+            const nextX = m.x + m.dir[0] * m.speed * dt;
+            const nextY = m.y + m.dir[1] * m.speed * dt;
+
+            // 前方探针检测（0.46 格距离）
+            const probeX = nextX + m.dir[0] * 0.46;
+            const probeY = nextY + m.dir[1] * 0.46;
+            const probeC = Math.floor(probeX);
+            const probeR = Math.floor(probeY);
+
+            let blocked = false;
+            if (probeC < 0 || probeC >= state.cols || probeR < 0 || probeR >= state.rows) {
+              blocked = true;
+            } else if (state.grid[probeR]?.[probeC] === 1) {
+              blocked = true;
+            } else if (state.door && !state.door.open && probeC === state.door.c && probeR === state.door.r) {
+              blocked = true;
+            }
+
+            if (blocked) {
+              // 遇到障碍墙壁或闭门：调转方向，稍作迟滞转向
+              m.dir[0] = -m.dir[0];
+              m.dir[1] = -m.dir[1];
+              m.pauseT = 0.2;
+            } else {
+              m.x = nextX;
+              m.y = nextY;
+              m.c = Math.floor(m.x);
+              m.r = Math.floor(m.y);
+            }
+          }
+        }
+
+        // 碰撞怪兽弹开（防挫败机制）
         const dx = b.x - m.x;
         const dy = b.y - m.y;
         const d = Math.hypot(dx, dy);
@@ -3331,6 +3411,11 @@ function update(dt) {
           b.vy = pushY;
           b.bumpT = 0.24;
           Sound.monsterBump();
+          if (m.moving) {
+            m.dir[0] = -m.dir[0];
+            m.dir[1] = -m.dir[1];
+            m.pauseT = 0.45;
+          }
           break;
         }
       }
@@ -3691,7 +3776,8 @@ function updateToolBtns() {
 function chapterInfo(n) {
   if (n <= 10) return { title: '小试身手', badge: '🥕' };
   if (n <= 20) return { title: '密室寻匙', badge: '🗝️' };
-  return { title: '勇士大冒险', badge: '⚔️' };
+  if (n <= 30) return { title: '勇士大冒险', badge: '⚔️' };
+  return { title: '巡逻大挑战', badge: '👾' };
 }
 
 function updateKeyHud() {
@@ -3847,7 +3933,7 @@ function renderHome() {
   $('totalMaxStars').textContent = '/' + MAX_STARS;
   const cur = clamp(save.current || 1, 1, TOTAL_LEVELS);
   $('startHint').textContent = cur > 1 ? '继续第 ' + cur + ' 关' : '从第 1 关开始';
-  $('levelScrollHint').textContent = '· 全30关冒险';
+  $('levelScrollHint').textContent = '· 全40关冒险';
 
   const grid = $('levelGrid');
   grid.innerHTML = '';
