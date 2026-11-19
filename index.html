@@ -1752,6 +1752,7 @@ function startLevel(n) {
     vx: 0, vy: 0, face: 1, facingDir: 'right', walkT: 0, bumpT: 0,
     hp: 3, maxHp: 3, invulnT: 0,
   };
+  state.hp = 3;
   resetPointer();
   resetJoypad();
   state.tapTarget = null;
@@ -3662,6 +3663,76 @@ function updateProgress(dt, now) {
   if (state.hint.path && now > state.hint.until) state.hint.path = null;
 }
 
+// 判定两点之间是否有石墙或关着的木门阻挡（防止隔墙挥剑穿透）
+function isLineClear(x1, y1, x2, y2) {
+  const dist = Math.hypot(x2 - x1, y2 - y1);
+  const steps = Math.max(2, Math.ceil(dist * 4));
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    const cx = Math.floor(x1 + (x2 - x1) * t);
+    const cy = Math.floor(y1 + (y2 - y1) * t);
+    if (state.grid[cy]?.[cx] === 1) return false;
+    if (state.door && !state.door.open && cx === state.door.c && cy === state.door.r) return false;
+  }
+  return true;
+}
+
+// 精准前方扇形打击判定（符合视觉出剑方向，杜绝打身后）
+function isMonsterInAttackRange(b, m, atkDir) {
+  if (!m || !m.alive) return false;
+  const dx = m.x - b.x;
+  const dy = m.y - b.y;
+  const dist = Math.hypot(dx, dy);
+
+  // 攻击射程：1.45格（大尺寸通道下充盈舒适）
+  if (dist > 1.45) return false;
+
+  // 必须没有墙体隔断
+  if (!isLineClear(b.x, b.y, m.x, m.y)) return false;
+
+  // 超近距离贴脸（0.55格以内），宝剑必定斩杀
+  if (dist <= 0.55) return true;
+
+  // 根据攻击方向判定前方扇面
+  if (atkDir === 'up') {
+    return dy <= 0.25 && Math.abs(dx) <= 0.95;
+  }
+  if (atkDir === 'down') {
+    return dy >= -0.25 && Math.abs(dx) <= 0.95;
+  }
+  if (atkDir === 'left') {
+    return dx <= 0.25 && Math.abs(dy) <= 0.95;
+  }
+  // default: right
+  return dx >= -0.25 && Math.abs(dy) <= 0.95;
+}
+
+// 挥剑攻击伤害检测（持续判定函数）
+function checkSwordHit() {
+  if (!state.sword.attacking) return false;
+  const b = state.bunny;
+  const atkDir = state.sword.attackDir || b.facingDir || 'right';
+  const { cell, ox, oy } = state.layout;
+
+  let hitAny = false;
+  if (state.monsters && state.monsters.length) {
+    for (const m of state.monsters) {
+      if (!m.alive) continue;
+      if (isMonsterInAttackRange(b, m, atkDir)) {
+        m.alive = false;
+        m.hitT = 0.32;
+        hitAny = true;
+        addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell, atkDir);
+      }
+    }
+  }
+
+  if (hitAny) {
+    Sound.monsterDefeat();
+  }
+  return hitAny;
+}
+
 function heroAttack() {
   if (state.phase !== 'play') return;
   if (state.level < 21) return;
@@ -3669,8 +3740,10 @@ function heroAttack() {
 
   const b = state.bunny;
 
-  // 1. 判定攻击朝向：优先即时操作方向，其次就近怪兽锁定，最后沿用移动朝向
+  // 1. 判定攻击朝向：
   let atkDir = b.facingDir || 'right';
+
+  // 优先级 1：摇杆即时推向
   if (state.joypad && state.joypad.active && state.joypad.strength > 0.2) {
     const jx = state.joypad.dirX, jy = state.joypad.dirY;
     if (Math.abs(jy) > Math.abs(jx) * 0.9) {
@@ -3678,20 +3751,31 @@ function heroAttack() {
     } else {
       atkDir = jx > 0 ? 'right' : 'left';
     }
-  } else if (state.keys && state.keys.size > 0) {
+  }
+  // 优先级 2：键盘方向键
+  else if (state.keys && state.keys.size > 0) {
     if (state.keys.has('up')) atkDir = 'up';
     else if (state.keys.has('down')) atkDir = 'down';
     else if (state.keys.has('left')) atkDir = 'left';
     else if (state.keys.has('right')) atkDir = 'right';
-  } else {
-    // 静止状态，智能锁定 1.35 格内最近存活怪兽
+  }
+  // 优先级 3：小兔正在移动（如点击寻路或惯性滑行中）
+  else if (Math.hypot(b.vx, b.vy) > 0.12) {
+    if (Math.abs(b.vy) > Math.abs(b.vx) * 0.9) {
+      atkDir = b.vy < 0 ? 'up' : 'down';
+    } else {
+      atkDir = b.vx > 0 ? 'right' : 'left';
+    }
+  }
+  // 优先级 4：完全静止不动，且同通道无墙遮挡 1.45 格内有活怪兽，辅助朝向最近怪兽
+  else {
     let nearestM = null;
-    let minDist = 1.35;
+    let minDist = 1.45;
     if (state.monsters && state.monsters.length) {
       for (const m of state.monsters) {
         if (!m.alive) continue;
         const d = Math.hypot(m.x - b.x, m.y - b.y);
-        if (d <= minDist) {
+        if (d <= minDist && isLineClear(b.x, b.y, m.x, m.y)) {
           minDist = d;
           nearestM = m;
         }
@@ -3713,34 +3797,13 @@ function heroAttack() {
 
   state.sword.attackDir = atkDir;
   b.facingDir = atkDir;
-
   state.sword.attacking = true;
   state.sword.attackT = 0.28;
   state.sword.cooldown = 0.35;
   Sound.swordSlash();
 
-  const attackRadius = 1.35;
-  const { cell, ox, oy } = state.layout;
-
-  let hitAny = false;
-  if (state.monsters && state.monsters.length) {
-    for (const m of state.monsters) {
-      if (!m.alive) continue;
-      const dx = m.x - b.x;
-      const dy = m.y - b.y;
-      const d = Math.hypot(dx, dy);
-      if (d <= attackRadius) {
-        m.alive = false;
-        m.hitT = 0.32;
-        hitAny = true;
-        addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell, atkDir);
-      }
-    }
-  }
-
-  if (hitAny) {
-    Sound.monsterDefeat();
-  }
+  // 立即执行一次瞬时判定
+  checkSwordHit();
 }
 
 function update(dt) {
@@ -3903,6 +3966,16 @@ function update(dt) {
         const dy = b.y - m.y;
         const d = Math.hypot(dx, dy);
         if (d < 0.68) {
+          // 剑刃防御判定：若小兔正在挥剑且怪兽在斩击范围内，怪兽直接被剑气斩杀，小兔免受伤害！
+          if (state.sword.attacking && state.sword.attackT > 0 && isMonsterInAttackRange(b, m, state.sword.attackDir)) {
+            m.alive = false;
+            m.hitT = 0.32;
+            const { cell, ox, oy } = state.layout;
+            addMonsterBurst(ox + m.x * cell, oy + m.y * cell, cell, state.sword.attackDir);
+            Sound.monsterDefeat();
+            continue;
+          }
+
           const pushX = (dx / (d || 1)) * 3.6;
           const pushY = (dy / (d || 1)) * 3.6;
           b.vx = pushX;
@@ -3912,7 +3985,8 @@ function update(dt) {
           if (m.aggressive) {
             if ((b.invulnT || 0) <= 0) {
               b.invulnT = 1.2;
-              state.hp = Math.max(0, (state.hp ?? 3) - 1);
+              b.hp = Math.max(0, (b.hp ?? 3) - 1);
+              state.hp = b.hp;
               Sound.bunnyHurt();
               updateHpHud();
               const hpPill = $('hpPill');
@@ -3921,7 +3995,7 @@ function update(dt) {
                 void hpPill.offsetWidth;
                 hpPill.classList.add('shake');
               }
-              if (state.hp <= 0) {
+              if (b.hp <= 0) {
                 doGameOver();
                 break;
               }
@@ -3939,6 +4013,11 @@ function update(dt) {
           break;
         }
       }
+    }
+
+    // 挥剑持续伤害判定（确保挥砍全过程均有杀伤力）
+    if (state.sword.attacking && state.sword.attackT > 0) {
+      checkSwordHit();
     }
 
     // 剑攻击冷却与计时
@@ -4313,7 +4392,7 @@ function updateHpHud() {
     return;
   }
   pill.classList.remove('hidden');
-  const hp = clamp(state.hp ?? 3, 0, 3);
+  const hp = clamp(state.bunny ? state.bunny.hp : (state.hp ?? 3), 0, 3);
   let html = '';
   for (let i = 0; i < 3; i++) {
     html += i < hp ? '❤️' : '🖤';
@@ -5112,6 +5191,9 @@ window.__migong = {
   state,
   startLevel,
   heroAttack,
+  checkSwordHit,
+  isLineClear,
+  isMonsterInAttackRange,
   win: doWin,
   doGameOver,
   retryCurrentLevel,
